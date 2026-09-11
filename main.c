@@ -2,10 +2,12 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "utils.h"
-#include "ocsort.h"
-#include "detections.h"
-#include "motmanager.h"
+#include "include/utils.h"
+#include "include/detections.h"
+#include "include/motmanager.h"
+
+#include "soa/ocsort.h"
+#include "soa/ocsort.h"
 
 long int
 count_detections_in_frame(
@@ -32,7 +34,7 @@ count_detections_in_frame(
 }
 
 template <>
-void MOTManager::run(OCSort& ocsort, struct Detection *dets, long int dets_len) {
+void MOTManager::run(OCSortSoA& ocsort, struct Detection *dets, long int dets_len) {
     int dets_offset = 0; // this has to be long long 
     long int frame_dets_len;
     struct Detection *frame_dets = NULL;
@@ -70,7 +72,7 @@ int main(int argc, char *argv[]) {
     }
 
     MK_OCSORT_DEFAULT_CONFIG(&ocsort_cfg);
-    OCSort ocsort(ocsort_cfg);
+    OCSortSoA ocsort(ocsort_cfg);
 
     if(ocsort.isValid() == 0) {
         return 1;
