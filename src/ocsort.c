@@ -33,6 +33,8 @@ char OCSort::isValid(void) {
     return cfg_valid;
 }
 
+/* Misc */
+
 void MK_OCSORT_DEFAULT_CONFIG(OCSORTcfg *cfg) {
     cfg->max_age        = 30;
     cfg->min_hits      = 3;
@@ -41,3 +43,17 @@ void MK_OCSORT_DEFAULT_CONFIG(OCSORTcfg *cfg) {
     cfg->delta_t        = 3;
     cfg->inertia        = 0.2;
 }
+
+int prune_low_conf_dets(float th, struct Detection *dets, int dets_len) {
+    for (int i = 0; i < dets_len; i++) {
+        if (dets[i].score < th) {
+            dets_len--;
+            dets[i] = dets[dets_len];
+            i--;
+        }
+    }
+
+    return dets_len;
+}
+
+

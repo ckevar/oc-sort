@@ -15,31 +15,10 @@
 
 
 
-CVKalmanFilter::CVKalmanFilter(void) {
-
-    // Measurment Noise
-    R[0] = R[1] = 1.0; // TODO: Check this
-    R[2] = R[3] = 10.0;
-    
-    // Process Noise
-    Q[0] = Q[1] = 1.0;  // TODO: check this
-    Q[2] = Q[3] = 1.0;
-    Q[4] = Q[5] = 0.01;
-    Q[6] = 0.01*0.01;
-
-}
-
 // --- Predict --
 
-void _predict_Pi(float P[][KF_NUM_STATES], unsigned i) {
-    unsigned j = i + 4;
-    P[i][i] += P[j][j] + P[i][j] + P[j][i];
-    P[i][j] += P[j][j];
-    P[j][i] += P[j][j];
-}
 
-
-void CVKalmanFilter::predict_soa(struct Tracks *trks, int trk_i) {
+void CVKalmanFilterSoA::predict_soa(struct Tracks *trks, int trk_i) {
     // --- Predict state ---
     // NOTE: This is the OC-SORT way to avoid overshooting, it works but it 
     // might not be the best approach. The overshooting happens because upon 
@@ -48,8 +27,8 @@ void CVKalmanFilter::predict_soa(struct Tracks *trks, int trk_i) {
     // update this is shrink down, because the are cannot grow that fast, and in
     // the next prediction this speed gets shrunk down so negative that the 
     // kalman filter just explodes.
-    if (trks->s[trk_i] + trks->ds[trk_i] <= 0.0) 
-        trks->ds[trk_i] = 0.0;
+    if (trks->s[trk_i] + trks->ds[trk_i] <= 0.0f) 
+        trks->ds[trk_i] = 0.0f;
     
     trks->x[trk_i] += trks->dx[trk_i];
     trks->y[trk_i] += trks->dy[trk_i];
@@ -60,9 +39,9 @@ void CVKalmanFilter::predict_soa(struct Tracks *trks, int trk_i) {
     // trks.ds[trk_i] = trks.ds[trk_i];
 
     // --- Predict Covariance ---
-    _predict_Pi(trks->covariance[trk_i], 0);   
-    _predict_Pi(trks->covariance[trk_i], 1);   
-    _predict_Pi(trks->covariance[trk_i], 2);
+    predict_Pi(trks->covariance[trk_i], 0);   
+    predict_Pi(trks->covariance[trk_i], 1);   
+    predict_Pi(trks->covariance[trk_i], 2);
     for (int j = 0; j < KF_NUM_STATES; j++)
         trks->covariance[trk_i][j][j] += Q[j];
     
@@ -129,7 +108,7 @@ void _update_P_with_K(float P[][KF_NUM_STATES], float *R, float *K) {
     _update_P33_with_k(P, R[3], K[3]);                              // NOTE: invoking a function is faster than unfolding
                                                                     // the array here.
 }
-void CVKalmanFilter::update(float *y, struct Tracks *trks, int trk_i) {
+void CVKalmanFilterSoA::update(float *y, struct Tracks *trks, int trk_i) {
     // Input:
     // - y: the difference between measured (z) and estimated (x): z - x,
     // - trks: a struct of arrays, holding all tracks,

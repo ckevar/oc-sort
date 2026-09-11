@@ -15,19 +15,17 @@ class OCSortSoA: public OCSort {
     public:
         OCSortSoA(OCSORTcfg config) : OCSort(config) {};
         int update(struct Detection *detsAoS, uint16_t dets_len);
-        // char isValid(void);
 
     private:
         /* Detections */
         struct DetectionSoA dets;  
-        uint16_t dets_len;
 
         /* Track */
         struct Tracks trks;
         void update_trk(int trk_idx, int det_idx);
         void predict_trks(void);
         void kf_update_trk(int trk_idx, int det_idx);
-        CVKalmanFilter kf;
+        CVKalmanFilterSoA kf;
 
         /* Association */
         int matched[MAX_TRACKS + 1]; // trks and detections
