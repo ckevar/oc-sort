@@ -5,7 +5,7 @@ A C/C++ implementation that uses static memory allocation, no vector library, no
 
 run:
 ``` bash
-./main dets/test-dets.bin
+./soa.bin dets/test-dets.bin
 ```
 
 ## `test-dets.bin`

@@ -1,0 +1,43 @@
+#include "include/ocsort.h"
+#include <cstdio>
+
+OCSort::OCSort(OCSORTcfg config) {
+    cfg = config;
+    if(0 == config_check(&config)) {
+        cfg_valid = 1;
+        cfg = config;
+    } else {
+        cfg_valid = 0;
+        cfg = {0};
+    }
+
+    active_trks = 0;
+    frame_count = 0;
+    ID_manager = 1;
+}
+
+char OCSort::config_check(OCSORTcfg *config) {
+    if (config->delta_t > MAX_OBSERVATIONS) {
+        fprintf(stderr, 
+                "[ERROR:] delta_t (%d) is larger than MAX_OBSERVATIONS (%d)." \
+                " If you need that amount of observations, increase MAX_OBSERVATIONS", 
+                config->delta_t, MAX_OBSERVATIONS);
+        return 1;
+    }
+
+    return 0;
+}
+
+
+char OCSort::isValid(void) {
+    return cfg_valid;
+}
+
+void MK_OCSORT_DEFAULT_CONFIG(OCSORTcfg *cfg) {
+    cfg->max_age        = 30;
+    cfg->min_hits      = 3;
+    cfg->iou_threshold  = 0.3;
+    cfg->det_thresh     = 0.5;
+    cfg->delta_t        = 3;
+    cfg->inertia        = 0.2;
+}

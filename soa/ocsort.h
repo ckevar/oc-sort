@@ -1,0 +1,56 @@
+#ifndef _SOA_OCSORT_H_
+#define _SOA_OCSORT_H_
+
+#include "include/detections.h"
+#include "include/ocsort.h"
+
+#include "soa/detections.h"
+#include "soa/track.h"
+
+#include "soa/kalman.h"
+
+// --- OC-SORT refactoring
+
+class OCSortSoA: public OCSort {
+    public:
+        OCSortSoA(OCSORTcfg config) : OCSort(config) {};
+        int update(struct Detection *detsAoS, uint16_t dets_len);
+        // char isValid(void);
+
+    private:
+        /* Detections */
+        struct DetectionSoA dets;  
+        uint16_t dets_len;
+
+        /* Track */
+        struct Tracks trks;
+        void update_trk(int trk_idx, int det_idx);
+        void predict_trks(void);
+        void kf_update_trk(int trk_idx, int det_idx);
+        CVKalmanFilter kf;
+
+        /* Association */
+        int matched[MAX_TRACKS + 1]; // trks and detections
+        int unmatched_trks[MAX_TRACKS];
+        int unmatched_dets[MAX_DETECTIONS];
+        unsigned unmatched_trks_count, unmatched_dets_count;
+        float cost_matrix[MAX_TRACKS * MAX_DETECTIONS];
+        float iou_matrix[MAX_TRACKS * MAX_DETECTIONS];
+
+        /* First Association */
+        void compute_first_cost(void);
+        void first_association(void);
+
+        /* Second Association */
+        int compute_second_cost(void);
+        void second_association(void);
+
+        /* Track Management */
+        void update_unmatched_tracks(void);
+        void create_new_tracks(void);
+        int export_and_prune_tracks(void);
+        void trackcpy(unsigned dest_i, unsigned src_i);
+
+};
+
+#endif
