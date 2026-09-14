@@ -309,46 +309,46 @@ void kalman_freeze(struct Tracks *t, unsigned i) {
     t->frozen_x[i] = t->x[i];
     t->frozen_y[i] = t->y[i];
     t->frozen_s[i] = t->s[i];
-    printf("  Freezing T%d: %f %f %f\n", t->track_id[i], t->x[i], t->y[i], t->s[i]);
 
     // NOTE: This are maintained because they aren't predicted
     // t->frozen_r[i] = t->r[i];
     // t->frozen_dx[i] = t->dx[i];
     // t->frozen_dy[i] = t->dy[i];
     // t->frozen_ds[i] = t->ds[i];
-    memcpy(&t->frozen_covariance[i], &t->covariance[i], 7 * 7 * sizeof(float));
+    memcpy(&t->frozen_covariance[i], &t->covariance[i], KF_NUM_STATES * KF_NUM_STATES * sizeof(float));
 }
 
 void kalman_unfreeze(CVKalmanFilterSoA *kf, struct Tracks *t, unsigned i, struct DetectionSoA *d, unsigned j) {
     // 1. copy back the frozen values
-
-    printf("    BR: x %f, y %f, s %f, r %f, dx %f, dy %f, ds %f\n", t->x[i], t->y[i], t->s[i], t->r[i], t->dx[i], t->dy[i], t->ds[i]);
     t->x[i] = t->frozen_x[i];
     t->y[i] = t->frozen_y[i];
     t->s[i] = t->frozen_s[i];
-    printf("    AR: x %f, y %f, s %f, r %f, dx %f, dy %f, ds %f\n", t->x[i], t->y[i], t->s[i], t->r[i], t->dx[i], t->dy[i], t->ds[i]);
+
     // NOTE: Remaining states (r, dx, dy, ds) are never modified during prediction
     // because of the constant velocity model.
-    memcpy(&t->covariance[i], &t->frozen_covariance[i], 7 * 7 * sizeof(float));
+    memcpy(&t->covariance[i], &t->frozen_covariance[i], KF_NUM_STATES * KF_NUM_STATES * sizeof(float));
 
-    float time_gap = (float) t->time_since_update[i]; // minus one because, time_since_updates starts counting from prediction
+    float time_gap = (float) t->time_since_update[i]; 
     // NOTE: in the oficial implementation, the `history obs` stores the xysr, 
     // which requires sqrt operations and divisions, instead we are saving
     // the xyxy, this only needs differences and a couple of divisions
     
     // Box 1
-    float w1 = t->history_obs[i][2] - t->history_obs[i][0];
-    float h1 = t->history_obs[i][3] - t->history_obs[i][1];
-    float x1 = t->history_obs[i][0] + w1 / 2.0f;
-    float y1 = t->history_obs[i][1] + h1 / 2.0f;
-    // printf("Box1: x1 %f, y1 %f, w1 = %f, h1 %f\n", x1, y1, w1, h1);
+//    float w1 = t->history_obs[i][2] - t->history_obs[i][0];
+//    float h1 = t->history_obs[i][3] - t->history_obs[i][1];
+//    float x1 = t->history_obs[i][0] + w1 / 2.0f;
+//    float y1 = t->history_obs[i][1] + h1 / 2.0f;
+
+    float w1 = t->latest_obs[i][2] - t->latest_obs[i][0];
+    float h1 = t->latest_obs[i][3] - t->latest_obs[i][1];
+    float x1 = t->latest_obs[i][0] + w1 / 2.0f;
+    float y1 = t->latest_obs[i][1] + h1 / 2.0f;
 
     // Box 2
     float dw = d->raw[j].x2 - d->raw[j].x1;
     float dh = d->raw[j].y2 - d->raw[j].y1;
     float dx = d->raw[j].x1 + dw / 2.0f;
     float dy = d->raw[j].y1 + dh / 2.0f;
-    // printf("Box2: x2 %f, y2 %f, w2 = %f, h2 %f\n", dx, dy, dw, dh);
     
     dx = (dx - x1) / time_gap;
     dy = (dy - y1) / time_gap;
@@ -358,7 +358,6 @@ void kalman_unfreeze(CVKalmanFilterSoA *kf, struct Tracks *t, unsigned i, struct
 
     float dz[4]; // innovation array
     
-    printf("unfolding kalman: dx %f, dy %f, dw = %f, dh %f, tgap %f\n", dx, dy, dw, dh, time_gap);
     for(int k = 0; k < time_gap; k++) {
         float x = x1 + (k + 1) * dx;
         float y = y1 + (k + 1) * dy;
@@ -372,29 +371,21 @@ void kalman_unfreeze(CVKalmanFilterSoA *kf, struct Tracks *t, unsigned i, struct
         dz[2] = s - t->s[i];
         dz[3] = r - t->r[i];
 
-        printf("  K=%d\n", k);
-        // printf("    NB: x %f, y %f, s %f, r %f\n", x, y, s, r);
-        printf("    CS: x %f, y %f, s %f, r %f, dx %f, dy %f, ds %f\n", t->x[i], t->y[i], t->s[i], t->r[i], t->dx[i], t->dy[i], t->ds[i]);
- 
         kf->update(dz, t, i);
-        printf("    US: %f %f %f %f %f %f %f\n", t->x[i], t->y[i], t->s[i], t->r[i], t->dx[i], t->dy[i], t->ds[i]);
         if (k < (time_gap - 1)) {
             kf->predict_soa(t, i);
-            printf("    PS: %f %f %f %f %f %f %f\n", t->x[i], t->y[i], t->s[i], t->r[i], t->dx[i], t->dy[i], t->ds[i]);
         }
-        printf("\n");
 
     }
-    printf("Updated State: %f %f %f %f %f %f %f\n", t->x[i], t->y[i], t->s[i], t->r[i], t->dx[i], t->dy[i], t->ds[i]);
 
 }
 
 void OCSortSoA::kf_update_trk(int trk_idx, int det_idx) {
     float dz[4];    // Innovation array
-    float *det_raw;
     
     if (det_idx < 0) {                          // This checks if there is a current observed state
         //if (trks.kf_observed_flag[trk_idx]) {   // This checks if there was a previous observed state
+        // NOTE: To be honest this one doesn't even have to behere, because we are checking the same conditional twice
         if ((trks.time_since_update[trk_idx] == 1) && (trks.age[trk_idx] > 1)) {   // This checks if there was a previous observed state
             kalman_freeze(&trks, trk_idx);
             trks.kf_observed_flag[trk_idx] = 1;
@@ -407,14 +398,6 @@ void OCSortSoA::kf_update_trk(int trk_idx, int det_idx) {
         trks.kf_observed_flag[trk_idx] = 0;
     }
 
-
-    det_raw = (float *)&dets.raw[det_idx];
-
-    memcpy(&trks.history_obs[trk_idx], 
-            det_raw + 1, // -> Ignores the first field (frame ID)
-            OBS_NET_LENGTH * sizeof(float));
-
-    
     // Compute innovation
     dz[0] = dets.x[det_idx]     - trks.x[trk_idx];
     dz[1] = dets.y[det_idx]     - trks.y[trk_idx];
@@ -512,13 +495,6 @@ void OCSortSoA::update_trk(int trk_idx, int det_idx) {
     }
 
     trks.latest_obs_available[trk_idx] = 1;
-    update_trk_observations(
-        &trks, 
-        trk_idx, 
-        (float *)(&dets.raw[det_idx]),
-        cfg.delta_t
-    ); 
-
     // --- NOTE: ---
     // Python's version require three addtional updates but they seem unnecesary
     // 1. history_observations array: Only used in the "public" version of oc-sort, but never called. It stores the lastest bounding boxes infinetely.
@@ -527,6 +503,15 @@ void OCSortSoA::update_trk(int trk_idx, int det_idx) {
     // --- END ---
     
     kf_update_trk(trk_idx, det_idx);
+
+    update_trk_observations(
+        &trks, 
+        trk_idx, 
+        (float *)(&dets.raw[det_idx]),
+        cfg.delta_t
+    ); 
+
+
     trks.time_since_update[trk_idx] = 0;
     trks.hit_streak[trk_idx]++;
 }
