@@ -208,41 +208,11 @@ int OCSortSoA::update(struct Detection *AoSdets, uint16_t AoSdets_len) {
     predict_trks();
 
     compute_first_cost();
-    /*
-    for (int u = 0; u < active_trks; u++) {
-        printf("%d ", trks.track_id[u]);
-        for (int v = 0; v < dets_len; v++) {
-            int index = u * dets_len + v;
-            printf("%f ", cost_matrix[index]);
-        }
-        printf("\n");
-    }
-    */
-    first_association();
-    /*
-    for (int u = 0; u < active_trks; u++) {
-        if(trks.track_id[u] == 18) {
-            printf("%f %f %f %f %f %f %f\n%f %f %f %f %f %f %f\n%f %f %f %f %f %f %f\n%f %f %f %f %f %f %f\n", 
-                    trks.covariance[u][0][0], trks.covariance[u][0][1], trks.covariance[u][0][2], trks.covariance[u][0][3], trks.covariance[u][0][4], trks.covariance[u][0][5], trks.covariance[u][0][6],
-                    trks.covariance[u][1][0], trks.covariance[u][1][1], trks.covariance[u][1][2], trks.covariance[u][1][3], trks.covariance[u][1][4], trks.covariance[u][1][5], trks.covariance[u][1][6],
-                    trks.covariance[u][2][0], trks.covariance[u][2][1], trks.covariance[u][2][2], trks.covariance[u][2][3], trks.covariance[u][2][4], trks.covariance[u][2][5], trks.covariance[u][2][6],
-                    trks.covariance[u][3][0], trks.covariance[u][3][1], trks.covariance[u][3][2], trks.covariance[u][3][3], trks.covariance[u][3][4], trks.covariance[u][3][5], trks.covariance[u][3][6]);
-        }
-    }
-    */
 
-    
-    // printf("F%d: uT %d, uD %d: Tid%d\n", frame_count, unmatched_trks_count, unmatched_dets_count, trks.track_id[unmatched_trks[0]]);
+    first_association();
+
     if ((unmatched_trks_count > 0) && (unmatched_dets_count > 0)) {
-        /*
-        for (int u = 0; u < unmatched_trks_count; u++) {
-            printf("Tid%d %f %f\n", trks.track_id[unmatched_trks[u]], trks.x1[unmatched_trks[u]], trks.y1[unmatched_trks[u]]);
-        }
-        for (int u = 0; u < unmatched_dets_count; u++) {
-            printf("D %f %f\n", dets.raw[unmatched_dets[u]].x1, dets.raw[unmatched_dets[u]].y1);
-        }
-        */
- 
+
         if (compute_second_cost()) {
             second_association();
         }
@@ -324,11 +294,10 @@ int OCSortSoA::compute_second_cost(void) {
     float iou, iou_max;
 
     /* TODO:
-    fprintf(stderr, "[WARNING@SECOND COST]: Remember that the solver only works for numbers higher than 0.\n");
     fprintf(stderr, "[WARNING@SECOND COST]: Even though a computer can solve floating points; however, when deployed on FPGAs, these values have to be integers\n");
     */
 
-    iou_max = 0.0;
+    iou_max = 0.0f;
     
     for (i = 0; i < unmatched_trks_count; i++) {
         for(j = 0; j < unmatched_dets_count; j++) {
@@ -439,7 +408,6 @@ void OCSortSoA::kf_update_trk(int trk_idx, int det_idx) {
             kalman_freeze(&trks, trk_idx);
             trks.kf_observed_flag[trk_idx] = 1;
         }
-        // trks.kf_observed_flag[trk_idx] = 0;
         return;
     }
 
@@ -488,20 +456,18 @@ void speed_direction(
     trk->vy[trk_idx] = dy / norm;
 }
 
+
 void compute_trk_velocities(
     struct Tracks *trks, 
     int trk_idx, 
     struct DetectionSoA *dets, 
     int det_idx,
-    int16_t k)
+    int k)
 {
-    float previous_box[OBS_LENGTH];
-    int16_t dt, target_age, cur_age, obs_age;
-    float *slot;
+    float *previous_box, *slot;
+    int dt, target_age, cur_age, obs_age;
     
-    // TODO: Do I need to copy the box to previous_box? I think it would be enough if we pass
-    // the pointer of that box.
-    memcpy(previous_box, trks->latest_obs[trk_idx], sizeof(float) * OBS_NET_LENGTH);
+    previous_box = trks->latest_obs[trk_idx];
     cur_age = trks->age[trk_idx];
 
     // Search if there's any previous bbox
@@ -509,11 +475,10 @@ void compute_trk_velocities(
         target_age = cur_age - dt;
 
         slot = trks->observations[trk_idx][target_age % k];
-        obs_age = (int16_t) slot[OBS_AGE_INDEX];
+        obs_age = (int) slot[OBS_AGE_INDEX];
         
         if(obs_age == target_age) {
-            // printf("%d %f %f %f %f %f\n", trks->track_id[trk_idx], slot[0], slot[1], slot[2], slot[3], slot[4]);
-            memcpy(previous_box, slot, sizeof(float) * OBS_NET_LENGTH);
+            previous_box = slot;
             break;
         }
     }
@@ -570,21 +535,7 @@ void OCSortSoA::update_trk(int trk_idx, int det_idx) {
     // 3. hits counter: updated but never used.
     // --- END ---
     
-    /*
-    printf(" XYSR@update-trk: %f,%f-%f,%f | D %f,%f-%f,%f\n",
-            trks.x[trk_idx],
-            trks.y[trk_idx],
-            trks.s[trk_idx],
-            trks.r[trk_idx],
-            dets.x[det_idx],
-            dets.y[det_idx],
-            dets.area[det_idx],
-            dets.ratio[det_idx]);
-    */
     kf_update_trk(trk_idx, det_idx);
-
-
-
     trks.time_since_update[trk_idx] = 0;
     trks.hit_streak[trk_idx]++;
 }
@@ -624,71 +575,16 @@ void OCSortSoA::first_association(void) {
             }
 
             matrix_idx = trk_idx * dets_len + det_idx;
-            // printf("T%d -> D%d\n", trk_idx, det_idx);
-            /*
-            printf("T%d: %f,%f-%f,%f | D %f,%f-%f,%f | cost = %f, IoU = %f < %f\n",
-                    trks.track_id[trk_idx],
-                    trks.x1[trk_idx],
-                    trks.y1[trk_idx],
-                    trks.x2[trk_idx],
-                    trks.y2[trk_idx],
-                    dets.raw[det_idx].x1,
-                    dets.raw[det_idx].y1,
-                    dets.raw[det_idx].x2,
-                    dets.raw[det_idx].y2,
-                    cost_matrix[matrix_idx],
-                    iou_matrix[matrix_idx],
-                    cfg.iou_threshold);
-            */
+
             if (iou_matrix[matrix_idx] < cfg.iou_threshold) {
                 unmatched_trks[unmatched_trks_count++] = trk_idx;
                 unmatched_dets[unmatched_dets_count++] = det_idx;
-                // printf("unmatched_dets[%d] = %d\n", unmatched_dets_count, det_idx);
             } else {
-                /*
-                printf("T%d: %f,%f,%f,%f -%f,%f,%f\n",
-                    trks.track_id[trk_idx],
-                    trks.x[trk_idx],
-                    trks.y[trk_idx],
-                    trks.s[trk_idx],
-                    trks.r[trk_idx],
-                    trks.dx[trk_idx],
-                    trks.dy[trk_idx],
-                    trks.ds[trk_idx]);
-                */
-                // NOTE/TODO: This might require to be after extracting all matches, 
-                // due to caching, loading and unloading cache lines obviously will degrade the performance.
-                update_trk(trk_idx, det_idx);
-                /*
-                printf("matched trk %d (T%d) with det %d\n", trk_idx, trks.track_id[trk_idx], det_idx);
-                printf("T%d: %f,%f,%f,%f -%f,%f,%f\n",
-                    trks.track_id[trk_idx],
-                    trks.x[trk_idx],
-                    trks.y[trk_idx],
-                    trks.s[trk_idx],
-                    trks.r[trk_idx],
-                    trks.dx[trk_idx],
-                    trks.dy[trk_idx],
-                    trks.ds[trk_idx]);
-                */
-
+               update_trk(trk_idx, det_idx);
             }
         }
     }
     
-    /*
-    if (frame_count > 24 && frame_count < 28) {
-        for (int u = 0; u < active_trks; u++) {
-            printf("AFTER update | ");
-            printf("T%d: %f,%f-%f,%f\n",
-                    trks.track_id[u],
-                    trks.x[u],
-                    trks.y[u],
-                    trks.s[u],
-                    trks.r[u]);
-        }
-    }
-    */
 }
 
 void OCSortSoA::second_association(void) {

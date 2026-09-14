@@ -13,6 +13,12 @@ class CVKalmanFilter {
         float Q[KF_NUM_STATES];
         float R[KF_NUM_MEASUREMENTS];
         void predict_Pi(float [][KF_NUM_STATES], int i);
+        void compute_K_fast(float *K, float P[][KF_NUM_STATES], float *R);
+        void update_P_with_K(float P[][KF_NUM_STATES], float *K, float *R);
+
+        void update_Pij_with_k(float P[][KF_NUM_STATES], float Rii, float *K, unsigned i);
+
+        void update_P33_with_k(float P[][KF_NUM_STATES], float R33, float K33);
 };
 
 

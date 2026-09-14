@@ -56,17 +56,6 @@ void CVKalmanFilterSoA::predict_soa(struct Tracks *trks, int trk_i) {
 // --- End Predict ---
 
 // --- Update ---
-void _compute_K_fast(float *K, float P[][KF_NUM_STATES], float *R) {
-    K[0] = P[0][0] / (P[0][0] + R[0]);
-    K[1] = P[1][1] / (P[1][1] + R[1]);
-    K[2] = P[2][2] / (P[2][2] + R[2]);
-    K[3] = P[3][3] / (P[3][3] + R[3]);
-
-    K[4] = P[4][0] / (P[0][0] + R[0]);
-    K[5] = P[5][1] / (P[1][1] + R[1]);
-    K[6] = P[6][2] / (P[2][2] + R[2]);
-}
-
 
 void _update_state_with_K(struct Tracks *trks, int i, float *K, float *y) {
     trks->x[i] += K[0] * y[0];
@@ -79,35 +68,8 @@ void _update_state_with_K(struct Tracks *trks, int i, float *K, float *y) {
     trks->ds[i] += K[6] * y[2];
 }
 
-void _update_Pij_with_k(float P[][KF_NUM_STATES], float Rii, float *K, unsigned i) {
-    unsigned j = i + 4;
-    float Pii = P[i][i];
-    float Pij = P[i][j];
-    float Kii = K[i];
-    float Kji = K[j];
-
-    float _1_Kii = 1 - Kii;
-    float KiKjiRii = Kii * Kji * Rii;
-    float Pji_KjiPii = P[j][i] - Kji * Pii;                         // NOTE: Pji is not faster thatn P[j][i]
-
-    P[i][i] = Pii * _1_Kii*_1_Kii + Kii*Kii * Rii;
-    P[i][j] = (-Kji * Pii + Pij) * _1_Kii + KiKjiRii;               // NOTE: KjiPii is not faster than Kji * Pii
-    P[j][i] = Pji_KjiPii * _1_Kii + KiKjiRii;
-    P[j][j] = Kji * (-Pij - Pji_KjiPii) + P[j][j] + Kji*Kji * Rii;  // NOTE: pre-computed Pjj is not faster that P[j][j]
-}
-
-void _update_P33_with_k(float P[][KF_NUM_STATES], float R33, float K33) {
-    P[3][3] = P[3][3] * (1 - K33) * (1 - K33) + K33 * K33 * R33;
-}
 
 
-void _update_P_with_K(float P[][KF_NUM_STATES], float *R, float *K) {
-    _update_Pij_with_k(P, R[0], K, 0);
-    _update_Pij_with_k(P, R[1], K, 1);
-    _update_Pij_with_k(P, R[2], K, 2);
-    _update_P33_with_k(P, R[3], K[3]);                              // NOTE: invoking a function is faster than unfolding
-                                                                    // the array here.
-}
 void CVKalmanFilterSoA::update(float *y, struct Tracks *trks, int trk_i) {
     // Input:
     // - y: the difference between measured (z) and estimated (x): z - x,
@@ -118,15 +80,12 @@ void CVKalmanFilterSoA::update(float *y, struct Tracks *trks, int trk_i) {
     float K[KF_NUM_STATES];
     // 1. Update state X
     // 1.1. Compute fast K:
-    _compute_K_fast(K, trks->covariance[trk_i], R);
-    if (18 == trks->track_id[trk_i]) {
-        printf("K_kf: %f %f %f %f %f %f %f\n", K[0], K[1], K[2], K[3], K[4], K[5], K[6]);
-    }
+    compute_K_fast(K, trks->covariance[trk_i], R);
 
     // 1.2. Update Track States
     _update_state_with_K(trks, trk_i, K, y);
 
     // 2. Update P having (K), there's another method that we can update P without K.
-    _update_P_with_K(trks->covariance[trk_i], R, K);
+    update_P_with_K(trks->covariance[trk_i], K, R);
 }
 // --- End Update
