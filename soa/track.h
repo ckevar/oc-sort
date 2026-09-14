@@ -50,7 +50,7 @@ struct Tracks {
 
     // History away from tracks state
     float observations[MAX_TRACKS][MAX_OBSERVATIONS][OBS_LENGTH];// bounding box [xyxy] | age
-    float latest_obs[MAX_TRACKS][OBS_LENGTH];                   // the most recent matched detection (literally the bounding box of the detection) holds x1,y1,x2,y2
+    float *latest_obs[MAX_TRACKS];
     float *momentum_obs[MAX_TRACKS];
     uint8_t latest_obs_available[MAX_TRACKS];                   // Remember that this has to be initialized as zero upon creation of a track is new. In FPGA this can be represented by a large number instead of an array of uint8_t
     uint16_t class_id[MAX_TRACKS];

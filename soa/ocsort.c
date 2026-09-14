@@ -35,7 +35,6 @@ inline void get_k_previous_observation(struct Tracks *t, int i, uint16_t k) {
         t->age[i],
         k,
         t->latest_obs[i]);
-
 }
 
 void xysr_to_xyxy_soa(struct Tracks *trks, int i) {
@@ -334,11 +333,6 @@ void kalman_unfreeze(CVKalmanFilterSoA *kf, struct Tracks *t, unsigned i, struct
     // the xyxy, this only needs differences and a couple of divisions
     
     // Box 1
-//    float w1 = t->history_obs[i][2] - t->history_obs[i][0];
-//    float h1 = t->history_obs[i][3] - t->history_obs[i][1];
-//    float x1 = t->history_obs[i][0] + w1 / 2.0f;
-//    float y1 = t->history_obs[i][1] + h1 / 2.0f;
-
     float w1 = t->latest_obs[i][2] - t->latest_obs[i][0];
     float h1 = t->latest_obs[i][3] - t->latest_obs[i][1];
     float x1 = t->latest_obs[i][0] + w1 / 2.0f;
@@ -383,10 +377,8 @@ void kalman_unfreeze(CVKalmanFilterSoA *kf, struct Tracks *t, unsigned i, struct
 void OCSortSoA::kf_update_trk(int trk_idx, int det_idx) {
     float dz[4];    // Innovation array
     
-    if (det_idx < 0) {                          // This checks if there is a current observed state
-        //if (trks.kf_observed_flag[trk_idx]) {   // This checks if there was a previous observed state
-        // NOTE: To be honest this one doesn't even have to behere, because we are checking the same conditional twice
-        if ((trks.time_since_update[trk_idx] == 1) && (trks.age[trk_idx] > 1)) {   // This checks if there was a previous observed state
+    if (det_idx < 0) {      // checks if there is a current observed state
+        if ((trks.time_since_update[trk_idx] == 1) && (trks.age[trk_idx] > 1)) {   // checks if there was a previous observed state
             kalman_freeze(&trks, trk_idx);
             trks.kf_observed_flag[trk_idx] = 1;
         }
@@ -460,7 +452,7 @@ void compute_trk_velocities(
     speed_direction(trks, trk_idx, dets, det_idx, previous_box);
 }
 
-void update_trk_observations(
+void legacy_update_trk_observations(
     struct Tracks *trks,
     int trk_idx,
     float *det_raw,
@@ -468,7 +460,7 @@ void update_trk_observations(
 {
     int age_index;
     
-    // 1. Copy to last observation
+    // 1. Copy to last observation, do we have to copy though? or we can only save the pointer of the new pushed
     memcpy(&trks->latest_obs[trk_idx], 
         det_raw + 1,                        // -> Ignores the first field (frame ID)
         OBS_NET_LENGTH * sizeof(float));    // -> Only copies the bounding box and score
@@ -483,6 +475,27 @@ void update_trk_observations(
     trks->observations[trk_idx][age_index][OBS_AGE_INDEX] = (float) trks->age[trk_idx];
 
 }
+
+void update_trk_observations(
+    struct Tracks *trks,
+    int trk_idx,
+    float *det_raw,
+    int k)
+{
+    int age_index;
+    
+    // NOTE: observations is age-based.
+    age_index = trks->age[trk_idx] % k;
+    memcpy(&trks->observations[trk_idx][age_index],
+        det_raw + 1,                        // -> Ignores the first field (frame ID)
+        OBS_NET_LENGTH * sizeof(float));
+
+    trks->observations[trk_idx][age_index][OBS_AGE_INDEX] = (float) trks->age[trk_idx];
+    trks->latest_obs[trk_idx] = (float *) &trks->observations[trk_idx][age_index];
+
+}
+
+
 
 void OCSortSoA::update_trk(int trk_idx, int det_idx) {
     if (det_idx < 0) {
@@ -645,7 +658,7 @@ void OCSortSoA::create_new_tracks(void) {
  
         // 2. Initialize Track's covariance
         // ----------------------------
-        memset(trks.covariance + active_trks, 0, sizeof(float) * 7 * 7);    // Sets all zeros.
+        memset(trks.covariance + active_trks, 0, sizeof(float) * KF_NUM_STATES * KF_NUM_STATES);    // Sets all zeros.
         for (j = 0; j < 7; j++) trks.covariance[active_trks][j][j] = 10.0f;  // Creates identity matrix.
         trks.covariance[active_trks][4][4] *= 1000.0f;                        // Speeds have
         trks.covariance[active_trks][5][5] *= 1000.0f;                        // higher 
@@ -670,11 +683,12 @@ void OCSortSoA::create_new_tracks(void) {
         // NOTE: we only care about the center `x` and `y` to compute
         // the speed, for everything else... there is mastercard hahaha
         // trks.momentum_obs[active_trks][0] = -1.0f;               
-        // trks.momentum_obs[active_trks][1] = -1.0f;  
-        // trks.latest_obs[active_trks][0] = -1.0f;
-        // trks.latest_obs[active_trks][1] = -1.0f;
-        // trks.latest_obs[active_trks][2] = -1.0f;
-        // trks.latest_obs[active_trks][3] = -1.0f;
+        // trks.momentum_obs[active_trks][1] = -1.0f;
+        trks.latest_obs[active_trks] = trks.observations[active_trks][0];
+        trks.latest_obs[active_trks][0] = -1.0f;
+        trks.latest_obs[active_trks][1] = -1.0f;
+        trks.latest_obs[active_trks][2] = -1.0f;
+        trks.latest_obs[active_trks][3] = -1.0f;
 
         trks.latest_obs_available[active_trks] = 0;
         // NOTE: future trks.class_id[active_trks] = 0;
@@ -703,23 +717,20 @@ void OCSortSoA::trackcpy(unsigned dest_i, unsigned src_i) {
     trks.y1[dest_i] = trks.y1[src_i];
     trks.y2[dest_i] = trks.y2[src_i];
     
-    memcpy(trks.covariance[dest_i], trks.covariance[src_i], sizeof(float) * 7 * 7);
+    memcpy(trks.covariance[dest_i], trks.covariance[src_i], sizeof(float) * KF_NUM_STATES * KF_NUM_STATES);
 
     trks.time_since_update[dest_i] = trks.time_since_update[src_i];
     trks.track_id[dest_i]          = trks.track_id[src_i];
     trks.hit_streak[dest_i]        = trks.hit_streak[src_i];
     trks.age[dest_i]               = trks.age[src_i];
 
-    memcpy(&trks.latest_obs[dest_i], trks.latest_obs[src_i], sizeof(float) * OBS_LENGTH);
+    trks.latest_obs[dest_i] = trks.latest_obs[src_i];
 
     trks.latest_obs_available[dest_i]   = trks.latest_obs_available[src_i];
     trks.vx[dest_i]                     = trks.vx[src_i];
     trks.vy[dest_i]                     = trks.vy[src_i];
     trks.kf_observed_flag[dest_i]       = trks.kf_observed_flag[src_i];
     trks.class_id[dest_i]               = trks.class_id[src_i];
-    
-    memcpy(&trks.history_obs[dest_i], &trks.history_obs[src_i], sizeof(float) * OBS_LENGTH);
-    
 }
 
 int OCSortSoA::export_and_prune_tracks(void) {
