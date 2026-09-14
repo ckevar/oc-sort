@@ -9,8 +9,7 @@
 #include <math.h>
 
 // --- Begin Prediction
-void k_previous_obs(
-    float out[][OBS_NET_LENGTH], 
+float *k_previous_obs(
     float input[][OBS_LENGTH], 
     int16_t cur_age, 
     int16_t k, 
@@ -20,26 +19,18 @@ void k_previous_obs(
     float *slot;
 
     for(dt = k; dt > 0; dt--) {
-
         target_age = cur_age - dt;
-        slot = input[target_age % k];
+        slot = input[target_age % k]; // int idx = (target_age % k + k) % k;
         observation_age = (int16_t) slot[OBS_AGE_INDEX];
         if (observation_age == target_age) {
-            memcpy(out, slot, sizeof(float) * OBS_NET_LENGTH); // NOTE/TODO: we dont actually need to
-                                                               // copy the entire observation, we only
-                                                               // need the velocities
-            return;
+            return slot;
         }
     }
-    memcpy(out, last_obs, sizeof(float) * OBS_NET_LENGTH);      // NOTE/TODO: we dont actually need to
-                                                                // copy the entire observation, we only
-                                                                // need the velocities.
+    return last_obs;
 }
 
 inline void get_k_previous_observation(struct Tracks *t, int i, uint16_t k) {
-    // TODO: fprintf(stderr, "WARNING: This get_k_previous_observation functions is a little bit clunky, it looks redundant, storing the latest observation and having flags such as latest_obs_available, it sounds a bit too much.\n");
-    k_previous_obs(
-        t->momentum_obs + i,
+    t->momentum_obs[i] =  k_previous_obs(
         t->observations[i],
         t->age[i],
         k,
@@ -653,7 +644,6 @@ void OCSortSoA::create_new_tracks(void) {
 
     for (i = 0; i < unmatched_dets_count; i++) {
         // 1. Initialize Track's state
-        //
         // ----------------------------
         det_idx = unmatched_dets[i];
         trks.x[active_trks] = dets.x[det_idx];
@@ -667,44 +657,44 @@ void OCSortSoA::create_new_tracks(void) {
         trks.x2[active_trks] = dets.raw[det_idx].x2;
         trks.y1[active_trks] = dets.raw[det_idx].y1;
         trks.y2[active_trks] = dets.raw[det_idx].y2;
-        printf("dets[%d] %f %f\n", det_idx, dets.raw[det_idx].x1, dets.raw[det_idx].y1);
  
         // 2. Initialize Track's covariance
         // ----------------------------
         memset(trks.covariance + active_trks, 0, sizeof(float) * 7 * 7);    // Sets all zeros.
-        for (j = 0; j < 7; j++) trks.covariance[active_trks][j][j] = 10.0;  // Creates identity matrix.
-        trks.covariance[active_trks][4][4] *= 1000.0;                        // Speeds have
-        trks.covariance[active_trks][5][5] *= 1000.0;                        // higher 
-        trks.covariance[active_trks][6][6] *= 1000.0;                        // variance.
+        for (j = 0; j < 7; j++) trks.covariance[active_trks][j][j] = 10.0f;  // Creates identity matrix.
+        trks.covariance[active_trks][4][4] *= 1000.0f;                        // Speeds have
+        trks.covariance[active_trks][5][5] *= 1000.0f;                        // higher 
+        trks.covariance[active_trks][6][6] *= 1000.0f;                        // variance.
                                                                             //
 
         // 3. Initialize Track's Meta
         // ----------------------------
         trks.time_since_update[active_trks] = 0;
+
         trks.track_id[active_trks] = ID_manager;
-        
         ID_manager++;
+
         trks.hit_streak[active_trks] = 0;
         trks.age[active_trks] = 0;
 
         for (int j = 0; j < MAX_OBSERVATIONS; j++) {
             // trks.observations[active_trks][j][0...3] = -1.0;     // dont care.
-            trks.observations[active_trks][j][OBS_AGE_INDEX] = -10.0;
+            trks.observations[active_trks][j][OBS_AGE_INDEX] = -10.0f;
         }
 
         // NOTE: we only care about the center `x` and `y` to compute
         // the speed, for everything else... there is mastercard hahaha
-        trks.momentum_obs[active_trks][0] = -1.0;               
-        trks.momentum_obs[active_trks][1] = -1.0;  
-        trks.latest_obs[active_trks][0] = -1.0;
-        trks.latest_obs[active_trks][1] = -1.0;
-        trks.latest_obs[active_trks][2] = -1.0;
-        trks.latest_obs[active_trks][3] = -1.0;
+        // trks.momentum_obs[active_trks][0] = -1.0f;               
+        // trks.momentum_obs[active_trks][1] = -1.0f;  
+        // trks.latest_obs[active_trks][0] = -1.0f;
+        // trks.latest_obs[active_trks][1] = -1.0f;
+        // trks.latest_obs[active_trks][2] = -1.0f;
+        // trks.latest_obs[active_trks][3] = -1.0f;
 
         trks.latest_obs_available[active_trks] = 0;
         // NOTE: future trks.class_id[active_trks] = 0;
-        trks.vx[active_trks] = 0.0; // NOTE/TODO: Do we need to start these
-        trks.vy[active_trks] = 0.0; // Aren't they computed when they are needed?
+        trks.vx[active_trks] = 0.0f; // NOTE/TODO: Do we need to start these
+        trks.vy[active_trks] = 0.0f; // Aren't they computed when they are needed?
         trks.kf_observed_flag[active_trks] = 0;
 
         active_trks++;
