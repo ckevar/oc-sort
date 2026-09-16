@@ -31,14 +31,6 @@ class OCSortSoA: public OCSort {
         CVKalmanFilterSoA kf;
 
 
-        /* Association */
-        int matched[MAX_TRACKS + 1]; // trks and detections
-        int unmatched_trks[MAX_TRACKS];
-        int unmatched_dets[MAX_DETECTIONS];
-        unsigned unmatched_trks_count, unmatched_dets_count;
-        float cost_matrix[MAX_TRACKS * MAX_DETECTIONS];
-        float iou_matrix[MAX_TRACKS * MAX_DETECTIONS];
-
         /* First Association */
         void compute_first_cost(void);
         void first_association(void);
