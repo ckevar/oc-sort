@@ -243,7 +243,7 @@ void OCSortAoS::update_trk_observations(struct Track *t, float *det_raw) {
     // NOTE: Observation is age-based.
     age_index = t->age % cfg.delta_t;
     memcpy(t->observations[age_index], 
-            det_raw + 1,                        // > Ignores the first field (Frame ID)
+            &det_raw[1],                        // > Ignores the first field (Frame ID)
             sizeof(float) * OBS_NET_LENGTH);
 
     t->observations[age_index][OBS_AGE_INDEX] = (float) t->age;
@@ -312,7 +312,6 @@ void OCSortAoS::unfreeze_state(struct Track *t, struct DetectionAoS *d) {
         dz[1] = y - t->y;
         dz[2] = s - t->s;
         dz[3] = r - t->r;
-
 
         kf.update(t->state, t->covariance, dz);
         if (k < (time_gap - 1)) {
@@ -563,7 +562,7 @@ void OCSortAoS::create_new_tracks(void) {
                 dets[det_idx].xysrbox, 
                 sizeof(TRK_TEMPLATE.xysrbox));
         memcpy(trks[active_trks].xyxybox, 
-                det_raw + 1,    // Ignore the first field (Frame ID) 
+                &det_raw[1],    // Ignore the first field (Frame ID) 
                 sizeof(TRK_TEMPLATE.xyxybox));
                                                        
         // NOTE: future trks[active_trks].class_id = 0;
@@ -575,8 +574,30 @@ void OCSortAoS::create_new_tracks(void) {
 
 int OCSortAoS::export_and_prune_tracks(void) {
     int output_len = 0;
+    struct Track *t;
+    
+    for (int i = 0; i < active_trks; i++) {
 
-    OCSORT_SOA_NOT_IMPLEMENTED();
+        // Export Valid Tracks
+        t = &trks[i];
+        if ((t->time_since_update < 1) && ((t->hit_streak >= cfg.min_hits) | (frame_count <= cfg.min_hits))) {
+            bbox_out[output_len][0] = (float) t->track_id;
+            if(t->latest_obs_available) {
+                memcpy(&bbox_out[output_len][1], &t->latest_obs, sizeof(float) * 4);
+            } else {
+                memcpy(&bbox_out[output_len][1], &t->xyxybox, sizeof(float) * 4);
+            }
+
+            output_len++;
+        }
+
+        // Prune dead tracks
+        if(t->time_since_update > cfg.max_age) {
+            active_trks--;
+            trks[i] = trks[active_trks];
+            i--;
+        }
+    }
 
     return output_len;
 }
