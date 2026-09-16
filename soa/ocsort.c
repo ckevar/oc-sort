@@ -304,45 +304,50 @@ int OCSortSoA::compute_second_cost(void) {
     return 0;
 }
 
-void kalman_freeze(struct Tracks *t, unsigned i) {
-    t->frozen_x[i] = t->x[i];
-    t->frozen_y[i] = t->y[i];
-    t->frozen_s[i] = t->s[i];
+// --- Freezing / Unfreezing ---
+void OCSortSoA::freeze_state(int i) {
+    trks.frozen_x[i] = trks.x[i];
+    trks.frozen_y[i] = trks.y[i];
+    trks.frozen_s[i] = trks.s[i];
 
     // NOTE: This are maintained because they aren't predicted
-    // t->frozen_r[i] = t->r[i];
-    // t->frozen_dx[i] = t->dx[i];
-    // t->frozen_dy[i] = t->dy[i];
-    // t->frozen_ds[i] = t->ds[i];
-    memcpy(&t->frozen_covariance[i], &t->covariance[i], KF_NUM_STATES * KF_NUM_STATES * sizeof(float));
+    // trks.frozen_r[i]  = trks.r[i];
+    // trks.frozen_dx[i] = trks.dx[i];
+    // trks.frozen_dy[i] = trks.dy[i];
+    // trks.frozen_ds[i] = trks.ds[i];
+    memcpy(&trks.frozen_covariance[i], 
+           &trks.covariance[i], 
+           KF_NUM_STATES * KF_NUM_STATES * sizeof(float));
 }
 
-void kalman_unfreeze(CVKalmanFilterSoA *kf, struct Tracks *t, unsigned i, struct DetectionSoA *d, unsigned j) {
+void OCSortSoA::unfreeze_state(int i, int j) {
     // 1. copy back the frozen values
-    t->x[i] = t->frozen_x[i];
-    t->y[i] = t->frozen_y[i];
-    t->s[i] = t->frozen_s[i];
+    trks.x[i] = trks.frozen_x[i];
+    trks.y[i] = trks.frozen_y[i];
+    trks.s[i] = trks.frozen_s[i];
 
     // NOTE: Remaining states (r, dx, dy, ds) are never modified during prediction
     // because of the constant velocity model.
-    memcpy(&t->covariance[i], &t->frozen_covariance[i], KF_NUM_STATES * KF_NUM_STATES * sizeof(float));
+    memcpy(&trks.covariance[i], 
+           &trks.frozen_covariance[i], 
+           KF_NUM_STATES * KF_NUM_STATES * sizeof(float));
 
-    float time_gap = (float) t->time_since_update[i]; 
+    float time_gap = (float) trks.time_since_update[i]; 
     // NOTE: in the oficial implementation, the `history obs` stores the xysr, 
     // which requires sqrt operations and divisions, instead we are saving
     // the xyxy, this only needs differences and a couple of divisions
     
     // Box 1
-    float w1 = t->latest_obs[i][2] - t->latest_obs[i][0];
-    float h1 = t->latest_obs[i][3] - t->latest_obs[i][1];
-    float x1 = t->latest_obs[i][0] + w1 / 2.0f;
-    float y1 = t->latest_obs[i][1] + h1 / 2.0f;
+    float w1 = trks.latest_obs[i][2] - trks.latest_obs[i][0];
+    float h1 = trks.latest_obs[i][3] - trks.latest_obs[i][1];
+    float x1 = trks.latest_obs[i][0] + w1 / 2.0f;
+    float y1 = trks.latest_obs[i][1] + h1 / 2.0f;
 
     // Box 2
-    float dw = d->raw[j].x2 - d->raw[j].x1;
-    float dh = d->raw[j].y2 - d->raw[j].y1;
-    float dx = d->raw[j].x1 + dw / 2.0f;
-    float dy = d->raw[j].y1 + dh / 2.0f;
+    float dw = dets.raw[j].x2 - dets.raw[j].x1;
+    float dh = dets.raw[j].y2 - dets.raw[j].y1;
+    float dx = dets.raw[j].x1 + dw / 2.0f;
+    float dy = dets.raw[j].y1 + dh / 2.0f;
     
     dx = (dx - x1) / time_gap;
     dy = (dy - y1) / time_gap;
@@ -360,36 +365,24 @@ void kalman_unfreeze(CVKalmanFilterSoA *kf, struct Tracks *t, unsigned i, struct
         float s = w * h;
         float r = w / h;
 
-        dz[0] = x - t->x[i];
-        dz[1] = y - t->y[i];
-        dz[2] = s - t->s[i];
-        dz[3] = r - t->r[i];
+        dz[0] = x - trks.x[i];
+        dz[1] = y - trks.y[i];
+        dz[2] = s - trks.s[i];
+        dz[3] = r - trks.r[i];
 
-        kf->update(dz, t, i);
+        kf.update(dz, &trks, i);
         if (k < (time_gap - 1)) {
-            kf->predict_soa(t, i);
+            kf.predict_soa(&trks, i);
         }
 
     }
 
 }
+// -- END Freezing / Unfreezing
 
-void OCSortSoA::kf_update_trk(int trk_idx, int det_idx) {
+void OCSortSoA::update_trk_state(int trk_idx, int det_idx) {
     float dz[4];    // Innovation array
     
-    if (det_idx < 0) {      // checks if there is a current observed state
-        if ((trks.time_since_update[trk_idx] == 1) && (trks.age[trk_idx] > 1)) {   // checks if there was a previous observed state
-            kalman_freeze(&trks, trk_idx);
-            trks.kf_observed_flag[trk_idx] = 1;
-        }
-        return;
-    }
-
-    if (trks.kf_observed_flag[trk_idx]) {
-        kalman_unfreeze(&kf, &trks, trk_idx, &dets, det_idx);
-        trks.kf_observed_flag[trk_idx] = 0;
-    }
-
     // Compute innovation
     dz[0] = dets.x[det_idx]     - trks.x[trk_idx];
     dz[1] = dets.y[det_idx]     - trks.y[trk_idx];
@@ -452,62 +445,43 @@ void compute_trk_velocities(
     speed_direction(trks, trk_idx, dets, det_idx, previous_box);
 }
 
-void legacy_update_trk_observations(
-    struct Tracks *trks,
-    int trk_idx,
-    float *det_raw,
-    int k)
-{
+void OCSortSoA::update_trk_observations(int trk_idx, int det_idx) {
     int age_index;
+    float *det_raw = (float *)(&dets.raw[det_idx]);
     
-    // 1. Copy to last observation, do we have to copy though? or we can only save the pointer of the new pushed
-    memcpy(&trks->latest_obs[trk_idx], 
-        det_raw + 1,                        // -> Ignores the first field (frame ID)
-        OBS_NET_LENGTH * sizeof(float));    // -> Only copies the bounding box and score
-                       
-    // 2. Log to observations: 
     // NOTE: observations is age-based.
-    age_index = trks->age[trk_idx] % k;
-    memcpy(&trks->observations[trk_idx][age_index],
+    age_index = trks.age[trk_idx] % cfg.delta_t;
+    memcpy(&trks.observations[trk_idx][age_index],
         det_raw + 1,                        // -> Ignores the first field (frame ID)
         OBS_NET_LENGTH * sizeof(float));
 
-    trks->observations[trk_idx][age_index][OBS_AGE_INDEX] = (float) trks->age[trk_idx];
+    trks.observations[trk_idx][age_index][OBS_AGE_INDEX] = (float) trks.age[trk_idx];
+    trks.latest_obs[trk_idx] = (float *) &trks.observations[trk_idx][age_index];
 
 }
-
-void update_trk_observations(
-    struct Tracks *trks,
-    int trk_idx,
-    float *det_raw,
-    int k)
-{
-    int age_index;
-    
-    // NOTE: observations is age-based.
-    age_index = trks->age[trk_idx] % k;
-    memcpy(&trks->observations[trk_idx][age_index],
-        det_raw + 1,                        // -> Ignores the first field (frame ID)
-        OBS_NET_LENGTH * sizeof(float));
-
-    trks->observations[trk_idx][age_index][OBS_AGE_INDEX] = (float) trks->age[trk_idx];
-    trks->latest_obs[trk_idx] = (float *) &trks->observations[trk_idx][age_index];
-
-}
-
 
 
 void OCSortSoA::update_trk(int trk_idx, int det_idx) {
     if (det_idx < 0) {
-        kf_update_trk(trk_idx, -1);
+        if ((1 == trks.time_since_update[trk_idx]) && (trks.age[trk_idx] > 1)) {
+            freeze_state(trk_idx);
+            trks.kf_observed_flag[trk_idx] = 1;
+        }
         return;
     }
-
-    if (trks.latest_obs_available[trk_idx]) { // no previous observation
+    
+    // Check Previous Observation
+    if (trks.latest_obs_available[trk_idx]) { 
         compute_trk_velocities(&trks, trk_idx, &dets, det_idx, cfg.delta_t);
     }
-
     trks.latest_obs_available[trk_idx] = 1;
+
+    // Check if there is something frozen
+    if (trks.kf_observed_flag[trk_idx]) {
+        unfreeze_state(trk_idx, det_idx);
+        trks.kf_observed_flag[trk_idx] = 0;
+    }
+
     // --- NOTE: ---
     // Python's version require three addtional updates but they seem unnecesary
     // 1. history_observations array: Only used in the "public" version of oc-sort, but never called. It stores the lastest bounding boxes infinetely.
@@ -515,15 +489,8 @@ void OCSortSoA::update_trk(int trk_idx, int det_idx) {
     // 3. hits counter: updated but never used.
     // --- END ---
     
-    kf_update_trk(trk_idx, det_idx);
-
-    update_trk_observations(
-        &trks, 
-        trk_idx, 
-        (float *)(&dets.raw[det_idx]),
-        cfg.delta_t
-    ); 
-
+    update_trk_state(trk_idx, det_idx);
+    update_trk_observations(trk_idx, det_idx);
 
     trks.time_since_update[trk_idx] = 0;
     trks.hit_streak[trk_idx]++;

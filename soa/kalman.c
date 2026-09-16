@@ -4,6 +4,8 @@
 #include <cstdio>
 /* END Debugging Header */
 
+#include <cstring>
+
 // This is hardcoded kalman for a 7-state CV model used in SORT and OC-SORT. where:
 // 1. state = [x, y, scale/area, aspect ratio, dx, dy, dscare/darea]
 // 2. The measured parameters are:
@@ -72,7 +74,7 @@ void _update_state_with_K(struct Tracks *trks, int i, float *K, float *y) {
 
 void CVKalmanFilterSoA::update(float *y, struct Tracks *trks, int trk_i) {
     // Input:
-    // - y: the difference between measured (z) and estimated (x): z - x,
+    // - y: Innovation Array, the difference between measured (z) and estimated (x): z - x,
     // - trks: a struct of arrays, holding all tracks,
     // - i: index of the track to be updated,
     //
@@ -89,3 +91,6 @@ void CVKalmanFilterSoA::update(float *y, struct Tracks *trks, int trk_i) {
     update_P_with_K(trks->covariance[trk_i], K, R);
 }
 // --- End Update
+
+
+

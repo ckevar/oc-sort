@@ -23,9 +23,13 @@ class OCSortSoA: public OCSort {
         /* Track */
         struct Tracks trks;
         void update_trk(int trk_idx, int det_idx);
+        void update_trk_state(int trk_idx, int det_idx);
+        void update_trk_observations(int trk_idx, int det_idx);
         void predict_trks(void);
-        void kf_update_trk(int trk_idx, int det_idx);
+        void freeze_state(int i);
+        void unfreeze_state(int i, int j);
         CVKalmanFilterSoA kf;
+
 
         /* Association */
         int matched[MAX_TRACKS + 1]; // trks and detections
