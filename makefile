@@ -1,12 +1,12 @@
 
 .PHONY: clean all
 
-all: soa.bin #aos.bin
+all: soa.bin aos.bin
 
-soa.bin: *.c soa/*.c src/*.c
+soa.bin: mainsoa.c soa/*.c src/*.c
 	c++ -O3 -Wall -g -o $@ $^ -I. -lm
 
-aos.bin: *.c aos/*.c src/*.c
+aos.bin: mainaos.c aos/*.c src/*.c
 	c++ -O3 -Wall -g -o $@ $^ -I. -lm
 
 # --- Hungarian's --- {

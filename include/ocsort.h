@@ -12,7 +12,7 @@ typedef struct {
     int min_hits;
     float iou_threshold;
     float det_thresh;
-    int delta_t;
+    int delta_t;    // For mod operations is better to keep them as `int`
     float inertia;
 } OCSORTcfg;
 
@@ -35,6 +35,13 @@ class OCSort {
         int ID_manager;
         int active_trks;
 
+        /* Association */
+        int matched[MAX_TRACKS + 1]; // trks and detections
+        int unmatched_trks[MAX_TRACKS];
+        int unmatched_dets[MAX_DETECTIONS];
+        unsigned unmatched_trks_count, unmatched_dets_count;
+        float cost_matrix[MAX_TRACKS * MAX_DETECTIONS];
+        float iou_matrix[MAX_TRACKS * MAX_DETECTIONS];
 
         /* Misc */
         int frame_count;
