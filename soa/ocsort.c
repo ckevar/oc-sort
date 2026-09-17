@@ -52,8 +52,6 @@ void xysr_to_xyxy_soa(struct Tracks *trks, int i) {
 void OCSortSoA::predict_trks(void) {
     
     for (int i = 0; i < active_trks; i++) {
-        // printf("XYSR T%d: [%f, %f, %f, %f]\n", 
-        //        trks.track_id[i], trks.x[i], trks.y[i], trks.s[i], trks.r[i]);
 
         // --- Predict state ---
         // NOTE: This is the OC-SORT way to avoid overshooting, it works but it 
@@ -184,7 +182,7 @@ int OCSortSoA::update(struct Detection *AoSdets, uint16_t AoSdets_len) {
 
     frame_count++;
 
-    printf("F%d:\n----\n", frame_count - 1);
+    // printf("F%d:\n----\n", frame_count - 1);
 
     if (0 == AoSdets_len) { 
         return 0;
@@ -202,33 +200,24 @@ int OCSortSoA::update(struct Detection *AoSdets, uint16_t AoSdets_len) {
     
     det_AoS2SoA(&dets, AoSdets, dets_len);
     
-    printf("1 | Predicting\n");
     predict_trks();
 
-    printf("2 | Compute First Cost\n");
     compute_first_cost();
 
-    printf("3 | First Association\n");
     first_association();
 
-
-    printf("4 | Second Association\n");
     if ((unmatched_trks_count > 0) && (unmatched_dets_count > 0)) {
-        printf("5 | Second Cost\n");
         if (compute_second_cost()) {
-            printf("6 | Associating...\n");
             second_association();
         }
     }
 
     
-    printf("7 | Update unmatched tracks\n");
     update_unmatched_tracks();
 
-    printf("8 | Create New Tracks\n");
     create_new_tracks();
     
-    printf("  Active Tracks: %d\n  unmatched detections: %d\n  Unmatched Tracks %d\n  det len %d\n", active_trks, unmatched_dets_count, unmatched_trks_count, dets_len);
+    // printf("  Active Tracks: %d\n  unmatched detections: %d\n  Unmatched Tracks %d\n  det len %d\n", active_trks, unmatched_dets_count, unmatched_trks_count, dets_len);
     return export_and_prune_tracks();
 }
 
@@ -249,14 +238,9 @@ void OCSortSoA::compute_first_cost(void) {
     // cost matrix is nxm = active_trks x dets_len
     for (i = 0; i < active_trks; i++) {
 
-        // printf("%02d: ", trks.track_id[i]);
-        // printf("%f %f %f %f", trks.x1[i], trks.y1[i], trks.x2[i], trks.y2[i]); 
-        // printf("%f %f", trks.vy[i], trks.vx[i]);
-        // printf("%f %f %f %f", trks.momentum_obs[i][0], trks.momentum_obs[i][1], trks.momentum_obs[i][2], trks.momentum_obs[i][3]);
         for (j = 0; j < dets_len; j++) {
 
             //--- IoU 
-            // printf("%f ", dets.raw[j].x1);
             compute_iou(&iou, &dets, j, &trks, i);  // Range: 0.0 to 1.0
 
             //--- Momentum Cost
@@ -273,10 +257,7 @@ void OCSortSoA::compute_first_cost(void) {
             // devices.
             cost_matrix[index] = -(iou + angle_diff) + 1.3;
             iou_matrix[index] = iou;
-            // printf("%0.3f ", cost_matrix[index]);
-            // printf("%0.3f ", iou);
         }
-        // printf("\n");
     }
 
     return;
@@ -293,27 +274,13 @@ int OCSortSoA::compute_second_cost(void) {
 
     iou_max = 0.0f;
 
-    printf("Unmatched Ts %d, Unmatched Ds %d\n",
-            unmatched_trks_count, unmatched_dets_count);
-
-    printf("Unmatched D xyxy: %f %f %f %f\n", 
-            dets.raw[unmatched_dets[0]].x1,
-            dets.raw[unmatched_dets[0]].y1,
-            dets.raw[unmatched_dets[0]].x2,
-            dets.raw[unmatched_dets[0]].y2);
-   
     for (i = 0; i < unmatched_trks_count; i++) {
-        printf("T%d @ %0.3f:", 
-                trks.track_id[unmatched_trks[i]],
-                trks.x[unmatched_trks[i]]);
         for(j = 0; j < unmatched_dets_count; j++) {
             iou = compute_iou_lastest_obs(&dets, unmatched_dets[j], &trks, unmatched_trks[i]);
             index = (i * unmatched_dets_count) + j;
             cost_matrix[index] = -iou + 1.0f; // biasing this is important to solve the hungarian
-            printf("%0.3f ", iou);
             if (iou > iou_max) iou_max = iou;
         }
-        printf("\n");
     }   
     
     // NOTE: The second stage is only executed if the iou_max is larger than iou_max
@@ -370,7 +337,6 @@ void OCSortSoA::unfreeze_state(int i, int j) {
     dy = (dy - y1) / time_gap;
     dw = (dw - w1) / time_gap;
     dh = (dh - h1) / time_gap;
-    // printf("time gap %f\n", time_gap);
 
     float dz[4]; // innovation array
     
@@ -499,11 +465,6 @@ void OCSortSoA::update_trk(int trk_idx, int det_idx) {
         trks.kf_observed_flag[trk_idx] = 0;
     }
 
-    //printf("  XYSR: %f %f %f %f\n", 
-    //        trks.x[trk_idx], trks.y[trk_idx], trks.s[trk_idx], trks.r[trk_idx]);
-
-
-
     // --- NOTE: ---
     // Python's version require three addtional updates but they seem unnecesary
     // 1. history_observations array: Only used in the "public" version of oc-sort, but never called. It stores the lastest bounding boxes infinetely.
@@ -540,7 +501,6 @@ void OCSortSoA::first_association(void) {
     for(i = 1; i <= len; i++) {
         row = matched[i];
 
-        // printf("row %d, i %d\n", row, i);
         if (0 == row) {
             if (isTransposed) unmatched_trks[unmatched_trks_count++] = i - 1;
             else              unmatched_dets[unmatched_dets_count++] = i - 1;
@@ -554,12 +514,10 @@ void OCSortSoA::first_association(void) {
             }
 
             matrix_idx = trk_idx * dets_len + det_idx;
-            // printf(" T%d iou %f\n", trks.track_id[trk_idx], iou_matrix[matrix_idx]);
             if (iou_matrix[matrix_idx] < cfg.iou_threshold) {
                 unmatched_trks[unmatched_trks_count++] = trk_idx;
                 unmatched_dets[unmatched_dets_count++] = det_idx;
             } else {
-                // printf("Update T%d\n", trks.track_id[trk_idx]);
                 update_trk(trk_idx, det_idx);
             }
         }
@@ -582,7 +540,6 @@ void OCSortSoA::second_association(void) {
     for (i = 1; i <= len; i++) {
         row = matched[i];
 
-        printf("row %d, i %d\n", row, i);
         if (row > 0) {
             if (isTransposed) {
                 trk_idx = i - 1;
@@ -627,7 +584,6 @@ void OCSortSoA::second_association(void) {
 
 void OCSortSoA::update_unmatched_tracks(void) {
     for (unsigned i = 0; i < unmatched_trks_count; i++) {
-        printf(" T%d\n", trks.track_id[unmatched_trks[i]]);
         update_trk(unmatched_trks[i], -1);
     }
 }
@@ -739,7 +695,7 @@ int OCSortSoA::export_and_prune_tracks(void) {
         if ((trks.time_since_update[i] < 1) && ((trks.hit_streak[i] >= cfg.min_hits) || frame_count <= cfg.min_hits)) {
             bbox_out[output_len][0] = (float) trks.track_id[i];
             if (trks.latest_obs_available[i]) {
-                memcpy(&bbox_out[output_len][1], &trks.latest_obs[i], 4 * sizeof(float));
+                memcpy(&bbox_out[output_len][1], trks.latest_obs[i], 4 * sizeof(float));
             } else {
                 bbox_out[output_len][1] = trks.x1[i];
                 bbox_out[output_len][2] = trks.y1[i];
