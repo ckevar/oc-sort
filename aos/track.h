@@ -74,4 +74,8 @@ struct Track {
 
 
 
+void xysr2xyxy_aos(struct Track *t);
+
+
+
 #endif

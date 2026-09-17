@@ -7,7 +7,7 @@
 
 int OCSortAoS::update(struct Detection *raw_dets, uint16_t raw_dets_len) {
     frame_count++;
-    printf("\n> F%03d | \n-------+\n", frame_count - 1);
+    // printf("\n> F%03d | \n-------+\n", frame_count - 1);
 
     if(0 == raw_dets_len) {
         return 0;
@@ -24,31 +24,23 @@ int OCSortAoS::update(struct Detection *raw_dets, uint16_t raw_dets_len) {
 
     dets_xyxy2xysr(dets, raw_dets, dets_len);
 
-    printf("1 | Predicting\n");
     predict_trks();
 
-    printf("2 | Compute First Cost\n");
     compute_first_cost();
 
-    printf("3 | First Association\n");
     first_association();
 
-    printf("4 | Second Association\n");
     if ((unmatched_trks_count > 0) && (unmatched_dets_count > 0)) {
-        printf("5 | Second Cost\n");
         if (compute_second_cost()) {
-            printf("6 | Associating...\n");
             second_association();
         }
     }
     
-    printf("7 | Update unmatched tracks\n");
     update_unmatched_tracks();
 
-    printf("8 | Create New Tracks\n");
     create_new_tracks();
 
-    printf("  Active Tracks: %d\n  unmatched detections: %d\n  Unmatched Tracks %d\n  det len %d\n", active_trks, unmatched_dets_count, unmatched_trks_count, dets_len);
+    // printf("  Active Tracks: %d\n  unmatched detections: %d\n  Unmatched Tracks %d\n  det len %d\n", active_trks, unmatched_dets_count, unmatched_trks_count, dets_len);
     return export_and_prune_tracks();
     
 }
@@ -56,20 +48,6 @@ int OCSortAoS::update(struct Detection *raw_dets, uint16_t raw_dets_len) {
 // ------+
 // BEGIN | Track Prediction
 // ------+
-
-void xysr2xyxy_aos(struct Track *t) {
-    // TODO: this should only take as input the xysr and as output the xyxy
-    float w, h;
-    w = sqrtf(t->s * t->r);
-    h = t->s / w;
-    w /= 2.0f;
-    h /= 2.0f;
-    t->x1 = t->x - w;
-    t->x2 = t->x + w;
-    t->y1 = t->y - h;
-    t->y2 = t->y + h;
-
-}
 
 inline void get_k_previous_observation(struct Track *t, uint16_t k) {
     int16_t dt, cur_age, target_age, observation_age;
@@ -109,7 +87,6 @@ void OCSortAoS::predict_trks(void) {
 
         xysr2xyxy_aos(&trks[i]);
 
-
         get_k_previous_observation(&trks[i], cfg.delta_t);
     }
 } 
@@ -124,7 +101,6 @@ void OCSortAoS::predict_trks(void) {
 
 // float compute_inter_area(struct Detection *d, float *xyxy2) {
 float compute_inter_area(float *xyxy1, float *xyxy2) {
-    // TODO: this should only receive the xyxy boxes and xysr, fuck.
     float xmin, ymin, xmax, ymax;
     xmin = xyxy1[0] > xyxy2[0] ? xyxy1[0] : xyxy2[0];
     ymin = xyxy1[1] > xyxy2[1] ? xyxy1[1] : xyxy2[1];
@@ -159,8 +135,8 @@ compute_momentum_cost(
     // This functions ranges from -0.5 to 0.5
 
     // Intention of motion
-    float delta_x = d->x - (t->momentum_obs[2] + t->momentum_obs[0]) / 2.0;
-    float delta_y = d->y - (t->momentum_obs[3] + t->momentum_obs[1]) / 2.0;
+    float delta_x = d->x - (t->momentum_obs[2] + t->momentum_obs[0]) / 2.0f;
+    float delta_y = d->y - (t->momentum_obs[3] + t->momentum_obs[1]) / 2.0f;
     float norm = sqrtf(delta_x * delta_x + delta_y * delta_y) + 1e-6f;
 
     delta_x /= norm;
@@ -182,7 +158,6 @@ void OCSortAoS::compute_first_cost(void) {
     }
 
     for(i = 0; i < active_trks; i++) {
-        // printf("%02d: ", trks[i].track_id);
         for (j = 0; j < dets_len; j++) {
             //--- IoU
             compute_iou(&iou, &dets[j], &trks[i]);
@@ -196,10 +171,7 @@ void OCSortAoS::compute_first_cost(void) {
 
             cost_matrix[index] = -(iou + angle_diff) + 1.3;
             iou_matrix[index] = iou;
-            // printf("%0.3f ", cost_matrix[index]);
-            // printf("%0.3f ", iou);
         }
-        // printf("\n");
     }
 }
 
@@ -230,12 +202,12 @@ void OCSortAoS::update_trk_state(struct Track *t, struct DetectionAoS *d) {
 
 }
 
-void speed_direction(struct Track *t, struct DetectionAoS *d, float *prev_box) {
+void speed_direction(struct Track *t, float *det_xysrbox, float *prev_box) {
     float c1x = (prev_box[0] + prev_box[2]) / 2.0;
     float c1y = (prev_box[1] + prev_box[3]) / 2.0;
 
-    float dx = d->x - c1x;
-    float dy = d->y - c1y;
+    float dx = det_xysrbox[0] - c1x;
+    float dy = det_xysrbox[1] - c1y;
 
     float norm = sqrtf(dx * dx + dy * dy);
     t->vx = dx / norm;
@@ -243,7 +215,7 @@ void speed_direction(struct Track *t, struct DetectionAoS *d, float *prev_box) {
 
 }
 
-void compute_trk_velocities(struct Track *t, struct DetectionAoS *d, int k) {
+void compute_trk_velocities(struct Track *t, float *det_xysrbox, int k) {
     
     float *previous_box, *slot;
     int dt, target_age, cur_age, obs_age;
@@ -263,7 +235,7 @@ void compute_trk_velocities(struct Track *t, struct DetectionAoS *d, int k) {
         }
     }
 
-    speed_direction(t, d, previous_box);
+    speed_direction(t, det_xysrbox, previous_box);
 }
 
 void OCSortAoS::update_trk_observations(struct Track *t, float *det_raw) {
@@ -272,7 +244,7 @@ void OCSortAoS::update_trk_observations(struct Track *t, float *det_raw) {
     // NOTE: Observation is age-based.
     age_index = t->age % cfg.delta_t;
     memcpy(t->observations[age_index], 
-            &det_raw[1],                        // > Ignores the first field (Frame ID)
+            det_raw,
             sizeof(float) * OBS_NET_LENGTH);
 
     t->observations[age_index][OBS_AGE_INDEX] = (float) t->age;
@@ -366,7 +338,7 @@ void OCSortAoS::update_trk(int trk_idx, int det_idx) {
     
     // Check Previous Observation
     if(t->latest_obs_available) {
-        compute_trk_velocities(t, d, cfg.delta_t);
+        compute_trk_velocities(t, d->xysrbox, cfg.delta_t);
     }
     t->latest_obs_available = 1;
 
@@ -376,9 +348,6 @@ void OCSortAoS::update_trk(int trk_idx, int det_idx) {
         t->kf_observed_flag = 0;
     }
 
-    // printf("  XYSR: %f %f %f %f\n", 
-    //         t->x, t->y, t->s, t->r);
-
     // --- NOTE: ---
     // Python's version require three addtional updates but they seem unnecesary
     // 1. history_observations array: Only used in the "public" version of oc-sort, but never called. It stores the lastest bounding boxes infinetely.
@@ -387,7 +356,8 @@ void OCSortAoS::update_trk(int trk_idx, int det_idx) {
     // --- END ---
     
     update_trk_state(t, d);
-    update_trk_observations(t, (float *)d->raw);
+    update_trk_observations(t, d->raw->xyxybox);
+
     t->time_since_update = 0;
     t->hit_streak++;
 }
@@ -410,11 +380,9 @@ void OCSortAoS::first_association(void) {
     
     isTransposed = flinearsolver(matched, cost_matrix, active_trks, dets_len);
     len = isTransposed ? active_trks:dets_len;
-    // printf("is the matrix Transposed %d\n", isTransposed);
 
     for(i = 1; i <= len; i++) {
         row = matched[i];
-        // printf("row %d, i %d\n", row, i);
         if (0 == row) {
             if (isTransposed) unmatched_trks[unmatched_trks_count++] = i - 1;
             else              unmatched_dets[unmatched_dets_count++] = i - 1;
@@ -428,7 +396,6 @@ void OCSortAoS::first_association(void) {
             }
 
             matrix_idx = trk_idx * dets_len + det_idx;
-            // printf(" T%d iou %f\n", trks[trk_idx].track_id, iou_matrix[matrix_idx]);
 
             if (iou_matrix[matrix_idx] < cfg.iou_threshold) {
                 unmatched_trks[unmatched_trks_count++] = trk_idx;
@@ -436,7 +403,6 @@ void OCSortAoS::first_association(void) {
             } else {
                 // NOTE/TODO: we might want first extract and then perform the update
                 // because loading cache lines can degrade the performance.
-                // printf("Update T%d\n", trks[trk_idx].track_id);
                 update_trk(trk_idx, det_idx);
             }
         }
@@ -463,29 +429,16 @@ int OCSortAoS::compute_second_cost(void) {
     */
     iou_max = 0.0f;
 
-    printf("Unmatched Ts %d, Unmatched Ds %d\n",
-            unmatched_trks_count, unmatched_dets_count);
-
-    printf("Unmatched D xyxy: %f %f %f %f\n", 
-            dets[unmatched_dets[0]].raw->x1,
-            dets[unmatched_dets[0]].raw->y1,
-            dets[unmatched_dets[0]].raw->x2,
-            dets[unmatched_dets[0]].raw->y2);
-
     for (i = 0; i < unmatched_trks_count; i++) {
 
-        printf("T%d @ %0.3f: ", 
-                trks[unmatched_trks[i]].track_id,
-                trks[unmatched_trks[i]].x);
         for (j = 0; j < unmatched_dets_count; j++) {
             iou = compute_iou_lastest_obs(&dets[unmatched_dets[j]], trks[unmatched_trks[i]].latest_obs);
             index = (i * unmatched_dets_count) + j;
             cost_matrix[index] = -iou + 1.0f; // Biasing this is important to solve hungarian
-            printf("%0.3f ", iou);
+
             if (iou > iou_max) iou_max = iou;
 
         }
-        printf("\n");
     }
 
     if (iou_max > cfg.iou_threshold) 
@@ -518,7 +471,6 @@ void OCSortAoS::second_association(void) {
 
     for (i = 1; i <= len; i++) {
         row = matched[i];
-        printf("row %d, i %d\n", row, i);
         if(row > 0) {
             if (isTransposed) {
                 trk_idx = i - 1;
@@ -564,7 +516,6 @@ void OCSortAoS::second_association(void) {
 
 void OCSortAoS::update_unmatched_tracks(void) {
     for(unsigned i = 0; i < unmatched_trks_count; i++) {
-        printf(" T%d\n", trks[unmatched_trks[i]].track_id);
         update_trk(unmatched_trks[i], -1);
     }
 }
@@ -622,28 +573,22 @@ void OCSortAoS::load_track_template(void) {
 
 void OCSortAoS::create_new_tracks(void) {
     unsigned i, det_idx;
-    float *det_raw;
     
-    // printf("  Creating %d new tracks\n", unmatched_dets_count);
     for(i = 0; i < unmatched_dets_count; i++) {
 
         det_idx = unmatched_dets[i];
-        det_raw = (float *) dets[det_idx].raw;
 
-        // printf("    Creating track T num %d\n", active_trks);
         trks[active_trks] = TRK_TEMPLATE;
     
-        // printf("    Updating the xysr box\n");
         memcpy(trks[active_trks].xysrbox, 
                 dets[det_idx].xysrbox, 
                 sizeof(TRK_TEMPLATE.xysrbox));
-        // printf("    Updating the xyxy box\n");
+
         memcpy(trks[active_trks].xyxybox, 
-                &det_raw[1],    // Ignore the first field (Frame ID) 
+                dets[det_idx].raw->xyxybox,    // Ignore the first field (Frame ID) 
                 sizeof(TRK_TEMPLATE.xyxybox));
                                                        
         // NOTE: future trks[active_trks].class_id = 0;
-        // printf("    Assigning New ID%d\n", ID_manager);
         trks[active_trks].track_id = ID_manager;
         ID_manager++;
         active_trks++;
@@ -657,11 +602,9 @@ int OCSortAoS::export_and_prune_tracks(void) {
     for (int i = 0; i < active_trks; i++) {
         t = &trks[i];
 
-        // printf("Out T%d: time since update %d, hit streak %d \n", t->track_id, t->time_since_update, t->hit_streak);
         // Export Valid Tracks
         if ((t->time_since_update < 1) && ((t->hit_streak >= cfg.min_hits) || frame_count <= cfg.min_hits)) {
             bbox_out[output_len][0] = (float) t->track_id;
-            // printf("  Track Ready\n");
             if(t->latest_obs_available) {
                 memcpy(&bbox_out[output_len][1], t->latest_obs, sizeof(float) * 4);
             } else {
