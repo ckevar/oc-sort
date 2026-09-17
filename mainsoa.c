@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <time.h>
 
 #include "include/utils.h"
 #include "include/detections.h"
@@ -37,26 +38,37 @@ void MOTManager::run(OCSortSoA& ocsort, struct Detection *dets, long int dets_le
     int dets_offset = 0; // this has to be long long 
     long int frame_dets_len;
     struct Detection *frame_dets = NULL;
-    int trk_count;
+    int trk_count, frame_id;
+
+    // Timing
+    struct timespec tstart, tend;
+    long elapsedTimePerFrame = 0;
     
-    for(int frame_id = 0; 1; frame_id++) {
+    for(frame_id = 0; 1; frame_id++) {
         frame_dets_len = count_detections_in_frame(dets, frame_id, dets_offset, dets_len);
 
         if (frame_dets_len < 0) {
-            return;
+            break;
         }
 
         frame_dets = dets + dets_offset; 
-
-        // TODO: catch time here
+    
+        clock_gettime(CLOCK_MONOTONIC, &tstart);
         trk_count = ocsort.update(frame_dets, frame_dets_len);
-        // TODO: end time here
-        //
+        clock_gettime(CLOCK_MONOTONIC, &tend);
+
         save_trks(frame_id, (float *)ocsort.bbox_out, trk_count);
 
         dets_offset += frame_dets_len;
-        // if (frame_id == 134) break;
+
+        // Timing ns
+        elapsedTimePerFrame += (tend.tv_sec - tstart.tv_sec) * 1000000000L +
+            (tend.tv_nsec - tstart.tv_nsec);
+
+        if (frame_id == 2) break;
     }
+    elapsedTimePerFrame = elapsedTimePerFrame / ((long) frame_id);
+    printf("Average Time SoA: %ldns\n", elapsedTimePerFrame);
 }
 
 int main(int argc, char *argv[]) {
