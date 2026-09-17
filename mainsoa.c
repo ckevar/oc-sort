@@ -65,7 +65,7 @@ void MOTManager::run(OCSortSoA& ocsort, struct Detection *dets, long int dets_le
         elapsedTimePerFrame += (tend.tv_sec - tstart.tv_sec) * 1000000000L +
             (tend.tv_nsec - tstart.tv_nsec);
 
-        if (frame_id == 2) break;
+        // if (frame_id == 2) break;
     }
     elapsedTimePerFrame = elapsedTimePerFrame / ((long) frame_id);
     printf("Average Time SoA: %ldns\n", elapsedTimePerFrame);
@@ -81,18 +81,21 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "We need a detections binary file.\n");
         return 1;
     }
-
+    
+    printf("Creating OC-SORT..\n");
     MK_OCSORT_DEFAULT_CONFIG(&ocsort_cfg);
     OCSortSoA ocsort(ocsort_cfg);
 
     if(ocsort.isValid() == 0) {
         return 1;
     }
-
+    
+    printf("Loading detections\n");
     dets_len = dets_open(argv[1], 0, (float **)&dets);
     if (dets_len <= 0)
         return 1;
     
+    printf("Running MOT... \n");
     mot.run(ocsort, dets, dets_len);
 
     free(dets);
