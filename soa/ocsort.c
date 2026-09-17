@@ -3,10 +3,10 @@
 #include "soa/ocsort.h"
 #include "soa/track.h"
 
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <math.h>
 
 // --- Begin Prediction
 float *k_previous_obs(
@@ -156,8 +156,8 @@ compute_momentum_cost(
     // This functions ranges from -0.5 to 0.5
 
     // Intention of motion
-    float delta_x = d->x[j] - (t->momentum_obs[i][2] + t->momentum_obs[i][0]) / 2.0;
-    float delta_y = d->y[j] - (t->momentum_obs[i][3] + t->momentum_obs[i][1]) / 2.0;
+    float delta_x = d->x[j] - (t->momentum_obs[i][2] + t->momentum_obs[i][0]) / 2.0f;
+    float delta_y = d->y[j] - (t->momentum_obs[i][3] + t->momentum_obs[i][1]) / 2.0f;
     float norm = sqrtf(delta_x * delta_x + delta_y * delta_y) + 1e-6f;
 
     delta_x /= norm;
@@ -165,8 +165,14 @@ compute_momentum_cost(
 
     // Momentum Similarity
     *angle_diff = t->vx[i] * delta_x + t->vy[i] * delta_y;
-    *angle_diff = acos(*angle_diff);
-    *angle_diff = 0.5f  - (*angle_diff / M_PI);
+    /*
+     * // Clamp to [-1.0f, 1.0f]
+     * if (*angle_diff > 1.0f)  *angle_diff = 1.0f;
+     * if (*angle_diff < -1.0f) *angle_diff = -1.0f;
+     */
+
+    *angle_diff = acosf(*angle_diff);
+    *angle_diff = 0.5f  - (*angle_diff / M_PI_F);
 }
 
 // --- End First Association Cost

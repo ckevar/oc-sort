@@ -14,5 +14,10 @@
 /* OC-SORT Configurations */
 #define OBS_AGE_INDEX       4   // Age is stored as a helper
 #define OBS_NET_LENGTH      4   // BBox is the most important thing XYXY
+
+#ifndef M_PI_F
+#define M_PI_F              3.14159265358979323846f
+#endif
+
 #endif
  

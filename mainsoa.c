@@ -82,7 +82,6 @@ int main(int argc, char *argv[]) {
         return 1;
     }
     
-    printf("Creating OC-SORT..\n");
     MK_OCSORT_DEFAULT_CONFIG(&ocsort_cfg);
     OCSortSoA ocsort(ocsort_cfg);
 
@@ -90,12 +89,10 @@ int main(int argc, char *argv[]) {
         return 1;
     }
     
-    printf("Loading detections\n");
     dets_len = dets_open(argv[1], 0, (float **)&dets);
     if (dets_len <= 0)
         return 1;
     
-    printf("Running MOT... \n");
     mot.run(ocsort, dets, dets_len);
 
     free(dets);

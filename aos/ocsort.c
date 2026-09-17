@@ -1,7 +1,8 @@
 #include "include/hungarian.h"
+
 #include "aos/ocsort.h"
 
-#include <cmath>
+#include <math.h>
 #include <cstdio>
 #include <cstring>
 
@@ -144,8 +145,14 @@ compute_momentum_cost(
 
     // Momentum Similarity
     *angle_diff = t->vx * delta_x + t->vy* delta_y;
-    *angle_diff = acos(*angle_diff);
-    *angle_diff = 0.5f  - (*angle_diff / M_PI);
+    /*
+     * // Clamp to [-1.0f, 1.0f], potential NaN
+     * if (*angle_diff > 1.0f)  *angle_diff = 1.0f;
+     * if (*angle_diff < -1.0f) *angle_diff = -1.0f;
+     */
+
+    *angle_diff = acosf(*angle_diff);
+    *angle_diff = 0.5f  - (*angle_diff / M_PI_F);
 }
 
 void OCSortAoS::compute_first_cost(void) {
