@@ -21,17 +21,7 @@
 
 
 void CVKalmanFilterSoA::predict_soa(struct Tracks *trks, int trk_i) {
-    // --- Predict state ---
-    // NOTE: This is the OC-SORT way to avoid overshooting, it works but it 
-    // might not be the best approach. The overshooting happens because upon 
-    // track creation the bounding box is started from the bounding box, this 
-    // leads the delta area `ds` to be predicted as really high, however in the
-    // update this is shrink down, because the are cannot grow that fast, and in
-    // the next prediction this speed gets shrunk down so negative that the 
-    // kalman filter just explodes.
-    if (trks->s[trk_i] + trks->ds[trk_i] <= 0.0f) 
-        trks->ds[trk_i] = 0.0f;
-    
+   
     trks->x[trk_i] += trks->dx[trk_i];
     trks->y[trk_i] += trks->dy[trk_i];
     trks->s[trk_i] += trks->ds[trk_i];
