@@ -15,8 +15,6 @@ enum {
 // --- Predict ---
 // void CVKalmanFilterAoS::predict(struct Track *t) {
 void CVKalmanFilterAoS::predict(float *state, float P[][KF_NUM_STATES]) {
-    if (state[IDX_S] + state[IDX_dS] <= 0.0f)   // s + ds
-        state[IDX_dS] = 0.0f;
 
     state[IDX_X] += state[IDX_dX];
     state[IDX_Y] += state[IDX_dY];
