@@ -55,7 +55,7 @@ void MOTManager::run(OCSortSoA& ocsort, struct Detection *dets, long int dets_le
         save_trks(frame_id, (float *)ocsort.bbox_out, trk_count);
 
         dets_offset += frame_dets_len;
-        if (frame_id == 134) break;
+        // if (frame_id == 134) break;
     }
 }
 

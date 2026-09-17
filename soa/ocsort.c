@@ -464,14 +464,14 @@ void compute_trk_velocities(
 
 void OCSortSoA::update_trk_observations(int trk_idx, int det_idx) {
     int age_index;
-    float *det_raw = (float *)(&dets.raw[det_idx]);
     
     // NOTE: observations is age-based.
     age_index = trks.age[trk_idx] % cfg.delta_t;
-    memcpy(&trks.observations[trk_idx][age_index],
-        det_raw + 1,                        // -> Ignores the first field (frame ID)
-        OBS_NET_LENGTH * sizeof(float));
 
+    memcpy(&trks.observations[trk_idx][age_index],
+        dets.raw[det_idx].xyxybox,
+        OBS_NET_LENGTH * sizeof(float));
+ 
     trks.observations[trk_idx][age_index][OBS_AGE_INDEX] = (float) trks.age[trk_idx];
     trks.latest_obs[trk_idx] = (float *) &trks.observations[trk_idx][age_index];
 
@@ -712,7 +712,9 @@ void OCSortSoA::trackcpy(unsigned dest_i, unsigned src_i) {
     trks.y1[dest_i] = trks.y1[src_i];
     trks.y2[dest_i] = trks.y2[src_i];
     
-    memcpy(trks.covariance[dest_i], trks.covariance[src_i], sizeof(float) * KF_NUM_STATES * KF_NUM_STATES);
+    memcpy(trks.covariance[dest_i], 
+            trks.covariance[src_i], 
+            sizeof(float) * KF_NUM_STATES * KF_NUM_STATES);
 
     trks.time_since_update[dest_i] = trks.time_since_update[src_i];
     trks.track_id[dest_i]          = trks.track_id[src_i];
