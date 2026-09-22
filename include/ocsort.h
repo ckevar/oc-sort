@@ -20,7 +20,7 @@ class OCSort {
     public:
         OCSort(OCSORTcfg config);
         char isValid(void);
-        float bbox_out[MAX_TRACKS][5];
+        static float bbox_out[MAX_TRACKS][5];
 
     protected:
          /* Initialization */
@@ -36,12 +36,12 @@ class OCSort {
         int active_trks;
 
         /* Association */
-        int matched[MAX_TRACKS + 1]; // trks and detections
-        int unmatched_trks[MAX_TRACKS];
+        static int matched[MAX_TRACKS + 1]; // trks and detections
+        static int unmatched_trks[MAX_TRACKS];
         int unmatched_dets[MAX_DETECTIONS];
         unsigned unmatched_trks_count, unmatched_dets_count;
-        float cost_matrix[MAX_TRACKS * MAX_DETECTIONS];
-        float iou_matrix[MAX_TRACKS * MAX_DETECTIONS];
+        static float cost_matrix[MAX_TRACKS * MAX_DETECTIONS];
+        static float iou_matrix[MAX_TRACKS * MAX_DETECTIONS];
 
         /* Misc */
         int frame_count;

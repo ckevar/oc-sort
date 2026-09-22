@@ -26,7 +26,7 @@ class OCSortAoS: public OCSort {
         struct DetectionAoS dets[MAX_DETECTIONS];
 
         /* Track */
-        struct Track trks[MAX_TRACKS];
+        static struct Track trks[MAX_TRACKS];
         struct Track TRK_TEMPLATE;
         void predict_trks(void);
         void update_trk(int trk_idx, int det_idx);  // wrapper

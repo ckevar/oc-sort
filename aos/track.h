@@ -5,15 +5,23 @@
 
 #include "include/configuration.h"
 
+#ifndef KF_NUM_STATES
+#define KF_NUM_STATES   7
+#endif
+
+#ifndef KF_NUM_COV_COMPACT
+#define KF_NUM_COV_COMPACT  10
+#endif
+
 struct Track {
     union {
         struct {float x, y, s, r, dx, dy, ds;};
-        float state[7];
+        float state[KF_NUM_STATES];
         float xysrbox[4];
     };
 
     /* Kalman's */
-    float covariance[7][7];     // NOTE/TODO: This is a waste of memory, saving a 7x7(=49)
+    // float covariance[KF_NUM_STATES][KF_NUM_STATES];     // NOTE/TODO: This is a waste of memory, saving a 7x7(=49)
                                             // when deployed, only 7 + 3 + 3 (=13 positions are used)
                                             // as depicted in the following matrix: 
                                             //
@@ -30,6 +38,9 @@ struct Track {
                                             // 1s means taken, 0s means they are never touched, and
                                             // there's also the most funny thing that 2s even they
                                             // are calculated, it seems that they are never used.
+
+    float covariance[KF_NUM_COV_COMPACT];     // NOTE/TODO: This is a waste of memory, saving a 7x7(=49)
+
     // required for for re-runable Kalman
     uint8_t kf_observed_flag;
     
@@ -39,7 +50,8 @@ struct Track {
                                             // are required to be predicted, the remaining states are
                                             // maintained constant when frozen.
     };
-    float frozen_covariance[7][7];
+    // float frozen_covariance[KF_NUM_STATES][KF_NUM_STATES];
+    float frozen_covariance[KF_NUM_COV_COMPACT];
 
     // xyxy
     union {

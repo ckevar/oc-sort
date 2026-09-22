@@ -21,7 +21,7 @@ class OCSortSoA: public OCSort {
         struct DetectionSoA dets;  
 
         /* Track */
-        struct Tracks trks;
+        static struct Tracks trks;
         void update_trk(int trk_idx, int det_idx);
         void update_trk_state(int trk_idx, int det_idx);
         void update_trk_observations(int trk_idx, int det_idx);

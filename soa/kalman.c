@@ -35,7 +35,7 @@ void CVKalmanFilterSoA::predict_soa(struct Tracks *trks, int trk_i) {
     predict_Pi(trks->covariance[trk_i], 1);   
     predict_Pi(trks->covariance[trk_i], 2);
     for (int j = 0; j < KF_NUM_STATES; j++)
-        trks->covariance[trk_i][j][j] += Q[j];
+        trks->covariance[trk_i][j] += Q[j];
     
     // NOTE: ---
     // Apparently we dont use P[4][4], P[5][5], nor P[6][6]. They keep stacking

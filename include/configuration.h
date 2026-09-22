@@ -2,10 +2,10 @@
 #define _OC_SORT_CONFIG_H_
 
 /* Detections Configurations */
-#define MAX_DETECTIONS      600
+#define MAX_DETECTIONS      3100
 
 /* Tracks Configurations */
-#define MAX_TRACKS          600
+#define MAX_TRACKS          3100
 #define MAX_OBSERVATIONS    3   // Larger than max occlusion (30)
 #define OBS_LENGTH          5   // Gross length: Bbox | age
                                 // NOTE: `age` allows to keep track of the bbox

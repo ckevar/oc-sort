@@ -6,6 +6,8 @@
 #include <cstdio>
 #include <cstring>
 
+struct Track OCSortAoS::trks[MAX_TRACKS];
+
 int OCSortAoS::update(struct Detection *raw_dets, uint16_t raw_dets_len) {
     frame_count++;
     // printf("\n> F%03d | \n-------+\n", frame_count - 1);
@@ -145,11 +147,10 @@ compute_momentum_cost(
 
     // Momentum Similarity
     *angle_diff = t->vx * delta_x + t->vy* delta_y;
-    /*
-     * // Clamp to [-1.0f, 1.0f], potential NaN
-     * if (*angle_diff > 1.0f)  *angle_diff = 1.0f;
-     * if (*angle_diff < -1.0f) *angle_diff = -1.0f;
-     */
+
+    /* // Clamp to [-1.0f, 1.0f], potential NaN
+    *angle_diff = fminf(1.0f, fmaxf(-1.0f, *angle_diff));
+    */
 
     *angle_diff = acosf(*angle_diff);
     *angle_diff = 0.5f  - (*angle_diff / M_PI_F);
@@ -168,15 +169,14 @@ void OCSortAoS::compute_first_cost(void) {
         for (j = 0; j < dets_len; j++) {
             //--- IoU
             compute_iou(&iou, &dets[j], &trks[i]);
-            
+            index = (i * dets_len) + j;
+
             //--- Momentum Cost
             compute_momentum_cost(&angle_diff, &dets[j], &trks[i]);
             angle_diff = angle_diff * cfg.inertia * dets[j].raw->score;
 
             //-- Fill the matrices
-            index = (i * dets_len) + j;
-
-            cost_matrix[index] = -(iou + angle_diff) + 1.3;
+            cost_matrix[index] = -(iou + angle_diff) + 1.2f;
             iou_matrix[index] = iou;
         }
     }
@@ -268,7 +268,7 @@ void OCSortAoS::freeze_state(struct Track *t) {
     // t->frozen_ds = t->ds;
     memcpy(t->frozen_covariance, 
            t->covariance, 
-           KF_NUM_STATES * KF_NUM_STATES * sizeof(float));
+           KF_NUM_COV_COMPACT * sizeof(float));
 }
 
 void OCSortAoS::unfreeze_state(struct Track *t, struct DetectionAoS *d) {
@@ -278,7 +278,7 @@ void OCSortAoS::unfreeze_state(struct Track *t, struct DetectionAoS *d) {
     // because of the constant velocity model.
     memcpy(t->covariance, 
            t->frozen_covariance, 
-           KF_NUM_STATES * KF_NUM_STATES * sizeof(float));
+           KF_NUM_COV_COMPACT * sizeof(float));
     
     float time_gap = (float) t->time_since_update; 
     // NOTE: in the oficial implementation, the `history obs` stores the xysr, 
@@ -529,6 +529,7 @@ void OCSortAoS::update_unmatched_tracks(void) {
 
 void OCSortAoS::load_track_template(void) {
     int j;
+    // TODO: This can be set using memcopy or memset
     TRK_TEMPLATE.x  = 0.0f;
     TRK_TEMPLATE.y  = 0.0f;
     TRK_TEMPLATE.s  = 0.0f;
@@ -543,11 +544,19 @@ void OCSortAoS::load_track_template(void) {
 
     // 2. Initialize Track's covariance
     // ----------------------------
-    memset(TRK_TEMPLATE.covariance, 0, sizeof(float) * 7 * 7);      // Sets all zeros.
-    for (j = 0; j < 7; j++) TRK_TEMPLATE.covariance[j][j] = 10.0f;  // Creates identity matrix.
+    /* Legacy
+    memset(TRK_TEMPLATE.covariance, 0, sizeof(float) * KF_NUM_STATES * KF_NUM_STATES);      // Sets all zeros.
+    for (j = 0; j < KF_NUM_STATES; j++) TRK_TEMPLATE.covariance[j][j] = 10.0f;  // Creates identity matrix.
     TRK_TEMPLATE.covariance[4][4] *= 1000.0f;                       // Speeds have
     TRK_TEMPLATE.covariance[5][5] *= 1000.0f;                       // higher 
     TRK_TEMPLATE.covariance[6][6] *= 1000.0f;                       // variance.
+    */
+    memset(TRK_TEMPLATE.covariance, 0, sizeof(float) * KF_NUM_COV_COMPACT); // Sets all zeros.
+    for (j = 0; j < KF_NUM_STATES; j++) TRK_TEMPLATE.covariance[j] = 10.0f; // Creates identity matrix.
+    TRK_TEMPLATE.covariance[4] *= 1000.0f;                       // Speeds have
+    TRK_TEMPLATE.covariance[5] *= 1000.0f;                       // higher 
+    TRK_TEMPLATE.covariance[6] *= 1000.0f;                       // variance.
+    
  
     // 3. Initialize Track's Meta
     // ----------------------------

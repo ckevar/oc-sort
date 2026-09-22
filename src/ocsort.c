@@ -1,6 +1,12 @@
 #include "include/ocsort.h"
 #include <cstdio>
 
+float OCSort::bbox_out[MAX_TRACKS][5];
+int OCSort::matched[MAX_TRACKS + 1]; // trks and detections
+int OCSort::unmatched_trks[MAX_TRACKS];
+float OCSort::cost_matrix[MAX_TRACKS * MAX_DETECTIONS];
+float OCSort::iou_matrix[MAX_TRACKS * MAX_DETECTIONS];
+
 OCSort::OCSort(OCSORTcfg config) {
     cfg = config;
     if(0 == config_check(&config)) {

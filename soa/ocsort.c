@@ -8,6 +8,8 @@
 #include <string.h>
 #include <stdlib.h>
 
+struct Tracks OCSortSoA::trks;
+
 // --- Begin Prediction
 float *k_previous_obs(
     float input[][OBS_LENGTH], 
@@ -165,11 +167,10 @@ compute_momentum_cost(
 
     // Momentum Similarity
     *angle_diff = t->vx[i] * delta_x + t->vy[i] * delta_y;
-    /*
-     * // Clamp to [-1.0f, 1.0f]
-     * if (*angle_diff > 1.0f)  *angle_diff = 1.0f;
-     * if (*angle_diff < -1.0f) *angle_diff = -1.0f;
-     */
+
+    /* // Clamp to [-1.0f, 1.0f], potential NaN
+    *angle_diff = fminf(1.0f, fmaxf(-1.0f, *angle_diff));
+    */
 
     *angle_diff = acosf(*angle_diff);
     *angle_diff = 0.5f  - (*angle_diff / M_PI_F);
@@ -251,17 +252,17 @@ void OCSortSoA::compute_first_cost(void) {
 
             //--- Momentum Cost
             compute_momentum_cost(&angle_diff, &dets, j, &trks, i);     // Range: -0.5 to 0.5
-            angle_diff = angle_diff * cfg.inertia * dets.raw[j].score;  // Range: -0.2 to 0.2
+            angle_diff = angle_diff * cfg.inertia * dets.raw[j].score;  // Range: -0.1 to 0.1
             
             //--- Fill the matrices
             index = (i * dets_len) + j; 
-            // Then, cost matrix's range: -0.2 to 1.2, inverted: -1.2 to 0.2
+            // Then, cost matrix's range: -0.1 to 1.1, inverted: -1.1 to 0.1
             // NOTE: The hungarian implementation can't handle negative numbers, 
-            // so it is biased adding 1.3 (for safety reasons).
+            // so it is biased adding 1.2 (for safety reasons).
             // This also suggest we can quantize the cost, so it becomes a integer 
             // based matrix, which is smaller and faster to compute on constraint 
             // devices.
-            cost_matrix[index] = -(iou + angle_diff) + 1.3;
+            cost_matrix[index] = -(iou + angle_diff) + 1.2;
             iou_matrix[index] = iou;
         }
     }
@@ -308,7 +309,7 @@ void OCSortSoA::freeze_state(int i) {
     // trks.frozen_ds[i] = trks.ds[i];
     memcpy(&trks.frozen_covariance[i], 
            &trks.covariance[i], 
-           KF_NUM_STATES * KF_NUM_STATES * sizeof(float));
+           KF_NUM_COV_COMPACT * sizeof(float));
 }
 
 void OCSortSoA::unfreeze_state(int i, int j) {
@@ -320,7 +321,7 @@ void OCSortSoA::unfreeze_state(int i, int j) {
     // because of the constant velocity model.
     memcpy(&trks.covariance[i], 
            &trks.frozen_covariance[i], 
-           KF_NUM_STATES * KF_NUM_STATES * sizeof(float));
+           KF_NUM_COV_COMPACT * sizeof(float));
 
     float time_gap = (float) trks.time_since_update[i]; 
     // NOTE: in the oficial implementation, the `history obs` stores the xysr, 
@@ -615,12 +616,19 @@ void OCSortSoA::create_new_tracks(void) {
  
         // 2. Initialize Track's covariance
         // ----------------------------
+        /* Legacy
         memset(trks.covariance + active_trks, 0, sizeof(float) * KF_NUM_STATES * KF_NUM_STATES);    // Sets all zeros.
-        for (j = 0; j < 7; j++) trks.covariance[active_trks][j][j] = 10.0f;  // Creates identity matrix.
+        for (j = 0; j < KF_NUM_STATES; j++) trks.covariance[active_trks][j][j] = 10.0f;  // Creates identity matrix.
         trks.covariance[active_trks][4][4] *= 1000.0f;                        // Speeds have
         trks.covariance[active_trks][5][5] *= 1000.0f;                        // higher 
         trks.covariance[active_trks][6][6] *= 1000.0f;                        // variance.
-                                                                            //
+        */
+        memset(trks.covariance + active_trks, 0, sizeof(float) * KF_NUM_COV_COMPACT);    // Sets all zeros.
+        for (j = 0; j < KF_NUM_STATES; j++) trks.covariance[active_trks][j] = 10.0f;  // Creates identity matrix.
+        trks.covariance[active_trks][4] *= 1000.0f;                        // Speeds have
+        trks.covariance[active_trks][5] *= 1000.0f;                        // higher 
+        trks.covariance[active_trks][6] *= 1000.0f;                        // variance.
+ 
 
         // 3. Initialize Track's Meta
         // ----------------------------
@@ -676,7 +684,7 @@ void OCSortSoA::trackcpy(unsigned dest_i, unsigned src_i) {
     
     memcpy(trks.covariance[dest_i], 
             trks.covariance[src_i], 
-            sizeof(float) * KF_NUM_STATES * KF_NUM_STATES);
+            sizeof(float) * KF_NUM_COV_COMPACT);
 
     trks.time_since_update[dest_i] = trks.time_since_update[src_i];
     trks.track_id[dest_i]          = trks.track_id[src_i];

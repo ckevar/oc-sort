@@ -4,10 +4,10 @@
 all: soa.bin aos.bin
 
 soa.bin: mainsoa.c soa/*.c src/*.c
-	c++ -O3 -Wall -g -o $@ $^ -I. -lm
+	c++ -O3 -g -Wall -g -o $@ $^ -I. -lm
 
 aos.bin: mainaos.c aos/*.c src/*.c
-	c++ -O3 -Wall -g -o $@ $^ -I. -lm
+	c++ -O3 -g -Wall -g -o $@ $^ -I. -lm
 
 # --- Hungarian's --- {
 correctness_fhungarian: src/hungarian.c include/hungarian.h test/correctness_fhungarian.c

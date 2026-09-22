@@ -14,7 +14,8 @@ enum {
 
 // --- Predict ---
 // void CVKalmanFilterAoS::predict(struct Track *t) {
-void CVKalmanFilterAoS::predict(float *state, float P[][KF_NUM_STATES]) {
+// void CVKalmanFilterAoS::predict(float *state, float P[][KF_NUM_STATES]) {
+void CVKalmanFilterAoS::predict(float *state, float *P) {
 
     state[IDX_X] += state[IDX_dX];
     state[IDX_Y] += state[IDX_dY];
@@ -23,9 +24,9 @@ void CVKalmanFilterAoS::predict(float *state, float P[][KF_NUM_STATES]) {
     predict_Pi(P, 0);
     predict_Pi(P, 1);
     predict_Pi(P, 2);
-
+    
     for(int j = 0; j < KF_NUM_STATES; j++) 
-        P[j][j] += Q[j];
+        P[j] += Q[j];
 
     // NOTE: ---
     // Apparently we dont use P[4][4], P[5][5], nor P[6][6]. They keep stacking
@@ -49,7 +50,8 @@ void update_state_with_K(float *state, float *K, float *innovation) {
 }
 
 
-void CVKalmanFilterAoS::update(float *state, float P[][KF_NUM_STATES], float *innovation) {
+// void CVKalmanFilterAoS::update(float *state, float P[][KF_NUM_STATES], float *innovation) {
+void CVKalmanFilterAoS::update(float *state, float *P, float *innovation) {
     float K[KF_NUM_STATES]; // NOTE: This is local, because This class is a manager
     compute_K_fast(K, P, R);
     update_state_with_K(state, K, innovation);

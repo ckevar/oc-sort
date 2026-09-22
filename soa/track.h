@@ -4,6 +4,14 @@
 #include <stdint.h>
 #include "include/configuration.h"
 
+#ifndef KF_NUM_STATES
+#define KF_NUM_STATES       7
+#endif
+
+#ifndef KF_NUM_COV_COMPACT
+#define KF_NUM_COV_COMPACT  10
+#endif
+
 struct Tracks {
     float x[MAX_TRACKS];                    // Center x
     float y[MAX_TRACKS];                    // Center y
@@ -14,7 +22,7 @@ struct Tracks {
     float ds[MAX_TRACKS];
 
     /* Kalman's */
-    float covariance[MAX_TRACKS][7][7];     // NOTE/TODO: This is a waste of memory, saving a 7x7(=49)
+    // float covariance[MAX_TRACKS][KF_NUM_STATES][KF_NUM_STATES];     // NOTE/TODO: This is a waste of memory, saving a 7x7(=49)
                                             // when deployed, only 7 + 3 + 3 (=13 positions are used)
                                             // as depicted in the following matrix: 
                                             //
@@ -23,20 +31,20 @@ struct Tracks {
                                             // | 0 1 0 0 0 1 0 |
                                             // | 0 0 1 0 0 0 1 |
                                             // | 0 0 0 1 0 0 0 |
-                                            // | 1 0 0 0 2 0 0 |
-                                            // | 0 1 0 0 0 2 0 |
-                                            // | 0 0 1 0 0 0 2 |
+                                            // | 1 0 0 0 1 0 0 |
+                                            // | 0 1 0 0 0 1 0 |
+                                            // | 0 0 1 0 0 0 1 |
                                             // +-             -+
                                             //
-                                            // 1s means taken, 0s means they are never touched, and
-                                            // there's also the most funny thing that 2s even they
-                                            // are calculated, it seems that they are never used.
+                                            // 1s means taken, 0s means they are never touched
+     
+    float covariance[MAX_TRACKS][KF_NUM_COV_COMPACT];
     // required for for re-runable Kalman
     uint8_t kf_observed_flag[MAX_TRACKS];
     float frozen_x[MAX_TRACKS];
     float frozen_y[MAX_TRACKS];
     float frozen_s[MAX_TRACKS];
-    float frozen_covariance[MAX_TRACKS][7][7];
+    float frozen_covariance[MAX_TRACKS][KF_NUM_STATES][KF_NUM_STATES];
 
     // xyxy
     float x1[MAX_TRACKS];
