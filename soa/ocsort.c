@@ -54,8 +54,8 @@ void xysr_to_xyxy_soa(struct Tracks *trks, int i) {
 void OCSortSoA::predict_trks(void) {
     
     for (int i = 0; i < active_trks; i++) {
-
-        if (trks.track_id[i] == 109) {
+        
+        if (trks.track_id[i] == 84) {
             printf("XYSR T%d[%d]: [%f, %f, %f, %f]\n",
                     trks.track_id[i], i, trks.x[i], trks.y[i], trks.s[i], trks.r[i]);
         }
@@ -229,7 +229,7 @@ int OCSortSoA::update(struct Detection *AoSdets, uint16_t AoSdets_len) {
 
     create_new_tracks();
     
-    // printf("  Active Tracks: %d\n  unmatched detections: %d\n  Unmatched Tracks %d\n  det len %d\n", active_trks, unmatched_dets_count, unmatched_trks_count, dets_len);
+    printf("  Active Tracks: %d\n  unmatched detections: %d\n  Unmatched Tracks %d\n  det len %d\n", active_trks, unmatched_dets_count, unmatched_trks_count, dets_len);
     return export_and_prune_tracks();
 }
 
@@ -246,9 +246,13 @@ void OCSortSoA::compute_first_cost(void) {
     if (0 == active_trks) {
         return;
     }
-
+    
+    // printf("Computation First Association\n");
     // cost matrix is nxm = active_trks x dets_len
     for (i = 0; i < active_trks; i++) {
+
+        // printf("t%d: %f %p\n", trks.track_id[i], trks.latest_obs[i][0], trks.latest_obs[i]);
+        // printf("T%d:", trks.track_id[i]);
 
         for (j = 0; j < dets_len; j++) {
 
@@ -267,13 +271,13 @@ void OCSortSoA::compute_first_cost(void) {
             // This also suggest we can quantize the cost, so it becomes a integer 
             // based matrix, which is smaller and faster to compute on constraint 
             // devices.
-            cost_matrix[index] = -(iou + angle_diff) + 1.2;
+            cost_matrix[index] = -(iou + angle_diff) + 1.2f;
             iou_matrix[index] = iou;
+            // printf("%f ", -(iou + angle_diff));
         }
+        // printf("\n");
     }
 
-    return;
- 
 }
 
 int OCSortSoA::compute_second_cost(void) {
@@ -285,7 +289,7 @@ int OCSortSoA::compute_second_cost(void) {
     */
 
     iou_max = 0.0f;
-
+    printf("Second Association Computation ut %d, ud %d\n", unmatched_trks_count, unmatched_dets_count);
     for (i = 0; i < unmatched_trks_count; i++) {
         printf("t%d x=%f: ", trks.track_id[unmatched_trks[i]], trks.latest_obs[unmatched_trks[i]][0]);
         for(j = 0; j < unmatched_dets_count; j++) {
@@ -452,18 +456,22 @@ void OCSortSoA::update_trk_observations(int trk_idx, int det_idx) {
     memcpy(&trks.observations[trk_idx][age_index],
         dets.raw[det_idx].xyxybox,
         OBS_NET_LENGTH * sizeof(float));
-
-    if(109 == trks.track_id[trk_idx]) {
-        printf("T109 ageindex: %d\n", age_index);
+    
+    /*
+    if(107 == trks.track_id[trk_idx]) {
+        printf("T107 ageindex: %d\n", age_index);
         printf("match box: %f %f\n", dets.raw[det_idx].x1, dets.raw[det_idx].y1);
     }
+    */
  
     trks.observations[trk_idx][age_index][OBS_AGE_INDEX] = (float) trks.age[trk_idx];
     trks.latest_obs[trk_idx] = (float *) &trks.observations[trk_idx][age_index];
 
-    if(109 == trks.track_id[trk_idx]) {
+    /*
+    if(107 == trks.track_id[trk_idx]) {
         printf("Match box: %f %f\n", trks.latest_obs[trk_idx][0], trks.latest_obs[trk_idx][1]);
     }
+    */
     // TODO: the latest_obs pointer changes magically in frame 278
 
 }
@@ -539,10 +547,13 @@ void OCSortSoA::first_association(void) {
             }
 
             matrix_idx = trk_idx * dets_len + det_idx;
+            printf("T%d -> D %d ", trks.track_id[trk_idx], det_idx);
             if (iou_matrix[matrix_idx] < cfg.iou_threshold) {
+                printf("Rejected, iou %f\n", iou_matrix[matrix_idx]);
                 unmatched_trks[unmatched_trks_count++] = trk_idx;
                 unmatched_dets[unmatched_dets_count++] = det_idx;
             } else {
+                printf("Accepted\n");
                update_trk(trk_idx, det_idx);
             }
         }
@@ -576,11 +587,13 @@ void OCSortSoA::second_association(void) {
             matrix_idx = trk_idx * unmatched_dets_count + det_idx;
             iou = 1.0f - cost_matrix[matrix_idx];
             if (iou >= cfg.iou_threshold) { 
+                /*
                 printf("T%d -> D | cost_matrix %f\n",
                         trks.track_id[unmatched_trks[trk_idx]], 1.0f - cost_matrix[matrix_idx]);
                 printf("T@ %f %f -> D@%f %f\n", 
                         trks.x[unmatched_trks[trk_idx]], trks.y[unmatched_trks[trk_idx]],
                         dets.x[unmatched_dets[det_idx]], dets.y[unmatched_dets[det_idx]]);
+                */
  
                 update_trk(unmatched_trks[trk_idx], unmatched_dets[det_idx]); 
                 unmatched_trks[trk_idx] = -1;
@@ -621,6 +634,15 @@ void OCSortSoA::update_unmatched_tracks(void) {
 
 void OCSortSoA::create_new_tracks(void) {
     unsigned i, j, det_idx;
+    
+    /*
+    printf("Active Tracks\n");
+    for (i = 0; i < active_trks; i++) {
+        printf("trks[%d] = T%d\n", i, trks.track_id[i]);
+    }
+
+    printf("T[18] id %d\n", trks.track_id[18]);
+    */
 
     for (i = 0; i < unmatched_dets_count; i++) {
         // 1. Initialize Track's state
@@ -637,6 +659,7 @@ void OCSortSoA::create_new_tracks(void) {
         trks.x2[active_trks] = dets.raw[det_idx].x2;
         trks.y1[active_trks] = dets.raw[det_idx].y1;
         trks.y2[active_trks] = dets.raw[det_idx].y2;
+        // printf("new T%d %f %f\n", ID_manager, dets.raw[det_idx].x1, dets.raw[det_idx].y1);
  
         // 2. Initialize Track's covariance
         // ----------------------------
@@ -657,7 +680,7 @@ void OCSortSoA::create_new_tracks(void) {
         // 3. Initialize Track's Meta
         // ----------------------------
         trks.time_since_update[active_trks] = 0;
-
+        // printf("Creating T%d on T[%d] with active_trks %d\n", ID_manager, trks.track_id[active_trks], active_trks);
         trks.track_id[active_trks] = ID_manager;
         ID_manager++;
 
@@ -710,12 +733,17 @@ void OCSortSoA::trackcpy(unsigned dest_i, unsigned src_i) {
             trks.covariance[src_i], 
             sizeof(float) * KF_NUM_COV_COMPACT);
 
+    memcpy(trks.observations[dest_i],
+            trks.observations[src_i],
+            sizeof(float) * OBS_LENGTH * MAX_OBSERVATIONS);
+
+    int slot = (trks.latest_obs[src_i] - (float *)trks.observations[src_i]) / OBS_LENGTH;
+    trks.latest_obs[dest_i] = trks.observations[dest_i][slot];
+
     trks.time_since_update[dest_i] = trks.time_since_update[src_i];
     trks.track_id[dest_i]          = trks.track_id[src_i];
     trks.hit_streak[dest_i]        = trks.hit_streak[src_i];
     trks.age[dest_i]               = trks.age[src_i];
-
-    trks.latest_obs[dest_i] = trks.latest_obs[src_i];
 
     trks.latest_obs_available[dest_i]   = trks.latest_obs_available[src_i];
     trks.vx[dest_i]                     = trks.vx[src_i];
@@ -726,9 +754,26 @@ void OCSortSoA::trackcpy(unsigned dest_i, unsigned src_i) {
 
 int OCSortSoA::export_and_prune_tracks(void) {
     int output_len = 0;
-
-    for (int i = 0; i < active_trks; i++) {
     
+    for (int i = 0; i < active_trks; i++) {
+            
+        /*
+        if(trks.track_id[i] == 60) {
+            printf("hit_streak %d, time_since_update %d, age %d\n",
+                    trks.hit_streak[i],
+                    trks.time_since_update[i],
+                    trks.age[i]);
+        }
+        */
+        
+        /*
+        printf("Track %d id%d | buf: [%p - %p] | latest_obs: %p\n",
+           i,
+           trks.track_id[i],
+           (void*)&trks.observations[i][0][0],
+           (void*)&trks.observations[i][MAX_OBSERVATIONS - 1][OBS_LENGTH - 1],
+           (void*)trks.latest_obs[i]);
+        */ 
         // Export valid tracks
         if ((trks.time_since_update[i] < 1) && ((trks.hit_streak[i] >= cfg.min_hits) || frame_count <= cfg.min_hits)) {
             bbox_out[output_len][0] = (float) trks.track_id[i];
@@ -746,7 +791,17 @@ int OCSortSoA::export_and_prune_tracks(void) {
         // Prune dead tracks
         if (trks.time_since_update[i] > cfg.max_age) {
             active_trks--;
+            /*
+            printf("copying T%d: last obs %f\n", 
+                    trks.track_id[active_trks],
+                    trks.latest_obs[active_trks][0]);
+            */
             trackcpy(i, active_trks);
+            /*
+            printf("copied T%d: last obs %f\n", 
+                    trks.track_id[i],
+                    trks.latest_obs[i][0]);
+            */
             i--;
         }
     }
