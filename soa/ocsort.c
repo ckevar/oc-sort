@@ -55,6 +55,11 @@ void OCSortSoA::predict_trks(void) {
     
     for (int i = 0; i < active_trks; i++) {
 
+        if (trks.track_id[i] == 109) {
+            printf("XYSR T%d[%d]: [%f, %f, %f, %f]\n",
+                    trks.track_id[i], i, trks.x[i], trks.y[i], trks.s[i], trks.r[i]);
+        }
+
         // --- Predict state ---
         // NOTE: This is the OC-SORT way to avoid overshooting, it works but it 
         // might not be the best approach. The overshooting happens because upon 
@@ -189,7 +194,7 @@ int OCSortSoA::update(struct Detection *AoSdets, uint16_t AoSdets_len) {
 
     frame_count++;
 
-    // printf("F%d:\n----\n", frame_count - 1);
+    printf("F%d:\n----\n", frame_count - 1);
 
     if (0 == AoSdets_len) { 
         return 0;
@@ -282,12 +287,15 @@ int OCSortSoA::compute_second_cost(void) {
     iou_max = 0.0f;
 
     for (i = 0; i < unmatched_trks_count; i++) {
+        printf("t%d x=%f: ", trks.track_id[unmatched_trks[i]], trks.latest_obs[unmatched_trks[i]][0]);
         for(j = 0; j < unmatched_dets_count; j++) {
             iou = compute_iou_lastest_obs(&dets, unmatched_dets[j], &trks, unmatched_trks[i]);
+            printf("%f ", iou);
             index = (i * unmatched_dets_count) + j;
             cost_matrix[index] = -iou + 1.0f; // biasing this is important to solve the hungarian
             if (iou > iou_max) iou_max = iou;
         }
+        printf("\n");
     }   
     
     // NOTE: The second stage is only executed if the iou_max is larger than iou_max
@@ -444,9 +452,19 @@ void OCSortSoA::update_trk_observations(int trk_idx, int det_idx) {
     memcpy(&trks.observations[trk_idx][age_index],
         dets.raw[det_idx].xyxybox,
         OBS_NET_LENGTH * sizeof(float));
+
+    if(109 == trks.track_id[trk_idx]) {
+        printf("T109 ageindex: %d\n", age_index);
+        printf("match box: %f %f\n", dets.raw[det_idx].x1, dets.raw[det_idx].y1);
+    }
  
     trks.observations[trk_idx][age_index][OBS_AGE_INDEX] = (float) trks.age[trk_idx];
     trks.latest_obs[trk_idx] = (float *) &trks.observations[trk_idx][age_index];
+
+    if(109 == trks.track_id[trk_idx]) {
+        printf("Match box: %f %f\n", trks.latest_obs[trk_idx][0], trks.latest_obs[trk_idx][1]);
+    }
+    // TODO: the latest_obs pointer changes magically in frame 278
 
 }
 
@@ -525,7 +543,7 @@ void OCSortSoA::first_association(void) {
                 unmatched_trks[unmatched_trks_count++] = trk_idx;
                 unmatched_dets[unmatched_dets_count++] = det_idx;
             } else {
-                update_trk(trk_idx, det_idx);
+               update_trk(trk_idx, det_idx);
             }
         }
     }
@@ -558,6 +576,12 @@ void OCSortSoA::second_association(void) {
             matrix_idx = trk_idx * unmatched_dets_count + det_idx;
             iou = 1.0f - cost_matrix[matrix_idx];
             if (iou >= cfg.iou_threshold) { 
+                printf("T%d -> D | cost_matrix %f\n",
+                        trks.track_id[unmatched_trks[trk_idx]], 1.0f - cost_matrix[matrix_idx]);
+                printf("T@ %f %f -> D@%f %f\n", 
+                        trks.x[unmatched_trks[trk_idx]], trks.y[unmatched_trks[trk_idx]],
+                        dets.x[unmatched_dets[det_idx]], dets.y[unmatched_dets[det_idx]]);
+ 
                 update_trk(unmatched_trks[trk_idx], unmatched_dets[det_idx]); 
                 unmatched_trks[trk_idx] = -1;
                 unmatched_dets[det_idx] = -1;

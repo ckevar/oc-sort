@@ -62,6 +62,7 @@ void MOTManager::run(OCSortAoS& ocsort, struct Detection *dets, long int dets_le
 
         dets_offset += frame_dets_len;
 
+        if (285 == frame_id) break;
         // Timing ns
         elapsedTimePerFrame += (tend.tv_sec - tstart.tv_sec) * 1000000000L + 
             (tend.tv_nsec - tstart.tv_nsec);

@@ -10,7 +10,7 @@ struct Track OCSortAoS::trks[MAX_TRACKS];
 
 int OCSortAoS::update(struct Detection *raw_dets, uint16_t raw_dets_len) {
     frame_count++;
-    printf("\n> F%03d | \n-------+\n", frame_count - 1);
+    // printf("\n> F%03d | \n-------+\n", frame_count - 1);
 
     if(0 == raw_dets_len) {
         return 0;
@@ -72,10 +72,8 @@ void OCSortAoS::predict_trks(void) {
     
     for (int i = 0; i < active_trks; i++) {
         // TODO: optimize this "if" condition
-        if (trks[i].track_id == 109) {
-        printf("XYSR T%d: [%f, %f, %f, %f]\n", 
-               trks[i].track_id, trks[i].x, trks[i].y, trks[i].s, trks[i].r);
-        }
+        //printf("XYSR T%d: [%f, %f, %f, %f]\n", 
+        //       trks[i].track_id, trks[i].x, trks[i].y, trks[i].s, trks[i].r);
  
         if (trks[i].s + trks[i].ds <= 0.0f) {
             trks[i].ds = 0.0f;
@@ -104,7 +102,6 @@ void OCSortAoS::predict_trks(void) {
 // BEGIN | Compute First Cost
 // ------+
 
-// float compute_inter_area(struct Detection *d, float *xyxy2) {
 float compute_inter_area(float *xyxy1, float *xyxy2) {
     float xmin, ymin, xmax, ymax;
     xmin = xyxy1[0] > xyxy2[0] ? xyxy1[0] : xyxy2[0];
@@ -150,27 +147,12 @@ compute_momentum_cost(
     // Momentum Similarity
     *angle_diff = t->vx * delta_x + t->vy* delta_y;
 
-    // TRUE angle_diff {
-    // *angle_diff = fminf(1.0f, fmaxf(-1.0f, *angle_diff)); //
+    /* // Clamp to [-1.0f, 1.0f], potential NaN
+    *angle_diff = fminf(1.0f, fmaxf(-1.0f, *angle_diff));
+    */
+
     *angle_diff = acosf(*angle_diff);
-    *angle_diff = 0.5f  - (*angle_diff / M_PI_F); // = asinf(*angle_diff) / M_PI_F;
-    // }
-    
-
-
-    // angle_diff approximations
-    // *angle_diff = fminf(1.0f, fmaxf(-1.0f, *angle_diff));
-    // float x2 = (*angle_diff) * (*angle_diff);
-
-    // 1. Taylor Expansion
-       // *angle_diff = (*angle_diff) * (0.318310f + x2 * (0.053051f + x2 * 0.0477464f));
-
-    // 2. Taylor expansion tails capped
-       // *angle_diff = (*angle_diff) * (0.318310f + x2 * (0.053051f + x2 * 0.0477464f)) / 0.838216f;
-
-    // 3. Taylor expansion: average fitting:
-    //   *angle_diff = (*angle_diff) * (0.318310f + x2 * (0.053052f + x2 * 0.128638f));
-
+    *angle_diff = 0.5f  - (*angle_diff / M_PI_F);
 }
 
 void OCSortAoS::compute_first_cost(void) {
@@ -189,17 +171,17 @@ void OCSortAoS::compute_first_cost(void) {
             index = (i * dets_len) + j;
             iou_matrix[index] = iou;
 
-             // if (iou < cfg.iou_threshold) {
-             //    cost_matrix[index] = -iou + 1.2f;
-             // } else {
-              //--- Momentum Cost
-              compute_momentum_cost(&angle_diff, &dets[j], &trks[i]);
-              angle_diff = angle_diff * cfg.inertia * dets[j].raw->score;
+            if (iou < cfg.iou_threshold) {
+                cost_matrix[index] = 1.2f;  // Highest cost
+                                    
+            } else {
+                //--- Momentum Cost
+                compute_momentum_cost(&angle_diff, &dets[j], &trks[i]);
+                angle_diff = angle_diff * cfg.inertia * dets[j].raw->score;
 
-              //-- Fill the matrices
-              cost_matrix[index] = -(iou + angle_diff) + 1.2f;
-              iou_matrix[index] = iou;
-            // }
+                //-- Fill the matrices
+                cost_matrix[index] = -(iou + angle_diff) + 1.2f;
+            }
         }
     }
 }
