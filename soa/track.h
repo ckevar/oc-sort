@@ -44,6 +44,7 @@ struct Tracks {
     float frozen_x[MAX_TRACKS];
     float frozen_y[MAX_TRACKS];
     float frozen_s[MAX_TRACKS];
+    float frozen_ds[MAX_TRACKS];
     float frozen_covariance[MAX_TRACKS][KF_NUM_STATES][KF_NUM_STATES];
 
     // xyxy

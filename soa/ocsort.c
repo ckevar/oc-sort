@@ -55,10 +55,10 @@ void OCSortSoA::predict_trks(void) {
     
     for (int i = 0; i < active_trks; i++) {
         
-        if (trks.track_id[i] == 92) {
-            printf("XYSR T%d[%d]: [%f, %f, %f, %f]\n",
-                    trks.track_id[i], i, trks.x[i], trks.y[i], trks.s[i], trks.r[i]);
-            printf("Last Observatio x=%f\n", trks.latest_obs[i][0]);
+        if (trks.track_id[i] == 24) {
+            printf("XYSR T%d[%d]: [%f, %f, %f, %f, %f, %f, %f]\n",
+                    trks.track_id[i], i, trks.x[i], trks.y[i], trks.s[i], trks.r[i], trks.dx[i], trks.dy[i], trks.ds[i]);
+            printf("Last Observation x=%f\n", trks.latest_obs[i][0]);
         }
 
         // --- Predict state ---
@@ -226,11 +226,14 @@ int OCSortSoA::update(struct Detection *AoSdets, uint16_t AoSdets_len) {
     }
 
     
+    printf("Bupdate trks.ds T[23]id%d ds = %f\n", trks.track_id[23], trks.ds[23]);
     update_unmatched_tracks();
+    printf("trks.ds T[23]id%d ds = %f\n", trks.track_id[23], trks.ds[23]);
 
     create_new_tracks();
     
-    printf("  Active Tracks: %d\n  unmatched detections: %d\n  Unmatched Tracks %d\n  det len %d\n", active_trks, unmatched_dets_count, unmatched_trks_count, dets_len);
+    printf("  Active Tracks: %d\n  unmatched detections: %d\n  Unmatched Tracks %d\n  det len %d\n", 
+            active_trks, unmatched_dets_count, unmatched_trks_count, dets_len);
     return export_and_prune_tracks();
 }
 
@@ -253,12 +256,14 @@ void OCSortSoA::compute_first_cost(void) {
     for (i = 0; i < active_trks; i++) {
 
         // printf("t%d: %f %p\n", trks.track_id[i], trks.latest_obs[i][0], trks.latest_obs[i]);
-        printf("T%d:", trks.track_id[i]);
+        // printf("T%d:", trks.track_id[i]);
 
         for (j = 0; j < dets_len; j++) {
 
             //--- IoU 
             compute_iou(&iou, &dets, j, &trks, i);  // Range: 0.0 to 1.0
+            // printf("%.3f ", iou);
+            if (iou < (cfg.iou_threshold / 3.0f)) iou = 0.0f; // we need to remove 0.05
 
             //--- Momentum Cost
             compute_momentum_cost(&angle_diff, &dets, j, &trks, i);     // Range: -0.5 to 0.5
@@ -272,11 +277,18 @@ void OCSortSoA::compute_first_cost(void) {
             // This also suggest we can quantize the cost, so it becomes a integer 
             // based matrix, which is smaller and faster to compute on constraint 
             // devices.
-            cost_matrix[index] = -(iou + angle_diff) + 1.2f;
+            
             iou_matrix[index] = iou;
-            printf("%f ", -(iou + angle_diff));
+
+            // if (iou >= cfg.iou_threshold) {
+                cost_matrix[index] = -(iou + angle_diff) + 1.2f;
+            // } else {
+            //    cost_matrix[index] = -(iou + angle_diff) + 10.0f;
+            // }
+            // printf("%f ", -(iou + angle_diff));
+            // printf("%f ", angle_diff);
         }
-        printf("\n");
+        // printf("\n");
     }
 
 }
@@ -290,7 +302,7 @@ int OCSortSoA::compute_second_cost(void) {
     */
 
     iou_max = 0.0f;
-    printf("Second Association Computation ut %d, ud %d\n", unmatched_trks_count, unmatched_dets_count);
+    // printf("Second Association Computation ut %d, ud %d\n", unmatched_trks_count, unmatched_dets_count);
     for (i = 0; i < unmatched_trks_count; i++) {
         printf("t%d x=%f: ", trks.track_id[unmatched_trks[i]], trks.latest_obs[unmatched_trks[i]][0]);
         for(j = 0; j < unmatched_dets_count; j++) {
@@ -314,12 +326,20 @@ void OCSortSoA::freeze_state(int i) {
     trks.frozen_x[i] = trks.x[i];
     trks.frozen_y[i] = trks.y[i];
     trks.frozen_s[i] = trks.s[i];
+    trks.frozen_ds[i] = trks.ds[i]; // Even though it doesn't change within the
+                                    // kalman filter because they are predicted
+                                    // it changes due to guarding upon every 
+                                    // prediction
+    
+//     if (trks.track_id[i] == 24) {
+     printf("Freeze: %f %f %f %f %f %f %f\n",
+             trks.x[i], trks.y[i], trks.s[i], trks.r[i], trks.dx[i], trks.dy[i], trks.ds[i]);
+//     }
 
     // NOTE: This are maintained because they aren't predicted
     // trks.frozen_r[i]  = trks.r[i];
     // trks.frozen_dx[i] = trks.dx[i];
     // trks.frozen_dy[i] = trks.dy[i];
-    // trks.frozen_ds[i] = trks.ds[i];
     memcpy(trks.frozen_covariance[i], 
            trks.covariance[i], 
            KF_NUM_COV_COMPACT * sizeof(float));
@@ -331,6 +351,8 @@ void OCSortSoA::unfreeze_state(int i, int j) {
     trks.x[i] = trks.frozen_x[i];
     trks.y[i] = trks.frozen_y[i];
     trks.s[i] = trks.frozen_s[i];
+    trks.ds[i] = trks.frozen_ds[i];
+
     // NOTE: Remaining states (r, dx, dy, ds) are never modified during prediction
     // because of the constant velocity model.
     memcpy(trks.covariance[i], 
@@ -353,7 +375,9 @@ void OCSortSoA::unfreeze_state(int i, int j) {
     float dh = dets.raw[j].y2 - dets.raw[j].y1;
     float dx = dets.raw[j].x1 + dw / 2.0f;
     float dy = dets.raw[j].y1 + dh / 2.0f;
-
+    
+    printf("Unfreezing: %f %f %f %f %f %f %f\n", 
+            trks.x[i], trks.y[i], trks.s[i], trks.r[i], trks.dx[i], trks.dy[i], trks.ds[i]);
     printf("tgap = %f\nbox1: %f %f %f %f\nbox2: %f %f %f %f\n",
             time_gap,
             x1, y1, w1, h1,
@@ -496,11 +520,21 @@ void OCSortSoA::update_trk_observations(int trk_idx, int det_idx) {
 
 void OCSortSoA::update_trk(int trk_idx, int det_idx) {
     if (det_idx < 0) {
+        printf("Potential to freeze T%d: time_since_update %d, age %d, ds = %f\n", 
+                trks.track_id[trk_idx], trks.time_since_update[trk_idx], trks.age[trk_idx], trks.ds[trk_idx]);
         if ((1 == trks.time_since_update[trk_idx]) && (trks.age[trk_idx] > 1)) {
             freeze_state(trk_idx);
             trks.kf_observed_flag[trk_idx] = 1;
         }
         return;
+
+        /*  
+        Ok, im freezing, if there was a current time_since_update, which i assumed it works for the first 
+            association round, right? 
+        Lemme think about this: 
+
+        */
+
     }
     
     // Check Previous Observation
@@ -564,7 +598,7 @@ void OCSortSoA::first_association(void) {
             }
 
             matrix_idx = trk_idx * dets_len + det_idx;
-            printf("T%d -> D %d ", trks.track_id[trk_idx], det_idx);
+            printf("T%d -> D %d: x = %f ", trks.track_id[trk_idx], det_idx, dets.raw[det_idx].x1);
             if (iou_matrix[matrix_idx] < cfg.iou_threshold) {
                 printf("Rejected, iou %f\n", iou_matrix[matrix_idx]);
                 unmatched_trks[unmatched_trks_count++] = trk_idx;
@@ -660,7 +694,8 @@ void OCSortSoA::create_new_tracks(void) {
 
     printf("T[18] id %d\n", trks.track_id[18]);
     */
-
+    
+    printf("trks.ds T[23]id%d ds = %f\n", trks.track_id[23], trks.ds[23]);
     for (i = 0; i < unmatched_dets_count; i++) {
         // 1. Initialize Track's state
         // ----------------------------
@@ -727,6 +762,8 @@ void OCSortSoA::create_new_tracks(void) {
 
         active_trks++;
     }
+
+    printf("trks.ds T[23]id%d ds = %f\n", trks.track_id[23], trks.ds[23]);
 }
 
 void OCSortSoA::trackcpy(unsigned dest_i, unsigned src_i) {
