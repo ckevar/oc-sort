@@ -55,9 +55,10 @@ void OCSortSoA::predict_trks(void) {
     
     for (int i = 0; i < active_trks; i++) {
         
-        if (trks.track_id[i] == 84) {
+        if (trks.track_id[i] == 92) {
             printf("XYSR T%d[%d]: [%f, %f, %f, %f]\n",
                     trks.track_id[i], i, trks.x[i], trks.y[i], trks.s[i], trks.r[i]);
+            printf("Last Observatio x=%f\n", trks.latest_obs[i][0]);
         }
 
         // --- Predict state ---
@@ -247,12 +248,12 @@ void OCSortSoA::compute_first_cost(void) {
         return;
     }
     
-    // printf("Computation First Association\n");
+    printf("Computation First Association\n");
     // cost matrix is nxm = active_trks x dets_len
     for (i = 0; i < active_trks; i++) {
 
         // printf("t%d: %f %p\n", trks.track_id[i], trks.latest_obs[i][0], trks.latest_obs[i]);
-        // printf("T%d:", trks.track_id[i]);
+        printf("T%d:", trks.track_id[i]);
 
         for (j = 0; j < dets_len; j++) {
 
@@ -273,9 +274,9 @@ void OCSortSoA::compute_first_cost(void) {
             // devices.
             cost_matrix[index] = -(iou + angle_diff) + 1.2f;
             iou_matrix[index] = iou;
-            // printf("%f ", -(iou + angle_diff));
+            printf("%f ", -(iou + angle_diff));
         }
-        // printf("\n");
+        printf("\n");
     }
 
 }
@@ -319,20 +320,21 @@ void OCSortSoA::freeze_state(int i) {
     // trks.frozen_dx[i] = trks.dx[i];
     // trks.frozen_dy[i] = trks.dy[i];
     // trks.frozen_ds[i] = trks.ds[i];
-    memcpy(&trks.frozen_covariance[i], 
-           &trks.covariance[i], 
+    memcpy(trks.frozen_covariance[i], 
+           trks.covariance[i], 
            KF_NUM_COV_COMPACT * sizeof(float));
 }
 
 void OCSortSoA::unfreeze_state(int i, int j) {
+    printf("Unfreezing\n");
     // 1. copy back the frozen values
     trks.x[i] = trks.frozen_x[i];
     trks.y[i] = trks.frozen_y[i];
     trks.s[i] = trks.frozen_s[i];
     // NOTE: Remaining states (r, dx, dy, ds) are never modified during prediction
     // because of the constant velocity model.
-    memcpy(&trks.covariance[i], 
-           &trks.frozen_covariance[i], 
+    memcpy(trks.covariance[i], 
+           trks.frozen_covariance[i], 
            KF_NUM_COV_COMPACT * sizeof(float));
 
     float time_gap = (float) trks.time_since_update[i]; 
@@ -351,6 +353,11 @@ void OCSortSoA::unfreeze_state(int i, int j) {
     float dh = dets.raw[j].y2 - dets.raw[j].y1;
     float dx = dets.raw[j].x1 + dw / 2.0f;
     float dy = dets.raw[j].y1 + dh / 2.0f;
+
+    printf("tgap = %f\nbox1: %f %f %f %f\nbox2: %f %f %f %f\n",
+            time_gap,
+            x1, y1, w1, h1,
+            dx, dy, dw, dh);
     
     dx = (dx - x1) / time_gap;
     dy = (dy - y1) / time_gap;
@@ -373,12 +380,22 @@ void OCSortSoA::unfreeze_state(int i, int j) {
         dz[3] = r - trks.r[i];
 
         kf.update(dz, &trks, i);
+        printf("Updated State: %f %f %f %f\n", 
+            trks.x[i],
+            trks.y[i],
+            trks.s[i],
+            trks.r[i]);
+
         if (k < (time_gap - 1)) {
             kf.predict_soa(&trks, i);
         }
+        printf("Predicted State: %f %f %f %f\n", 
+            trks.x[i],
+            trks.y[i],
+            trks.s[i],
+            trks.r[i]);
 
     }
-
 }
 // -- END Freezing / Unfreezing
 
@@ -731,6 +748,9 @@ void OCSortSoA::trackcpy(unsigned dest_i, unsigned src_i) {
     
     memcpy(trks.covariance[dest_i], 
             trks.covariance[src_i], 
+            sizeof(float) * KF_NUM_COV_COMPACT);
+    memcpy(trks.frozen_covariance[dest_i],
+            trks.frozen_covariance[src_i],
             sizeof(float) * KF_NUM_COV_COMPACT);
 
     memcpy(trks.observations[dest_i],
