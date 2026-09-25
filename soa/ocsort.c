@@ -55,7 +55,7 @@ void OCSortSoA::predict_trks(void) {
     
     for (int i = 0; i < active_trks; i++) {
         
-        if (trks.track_id[i] == 142) {
+        if (trks.track_id[i] == 62) {
             printf("XYSR T%d[%d]: [%f, %f, %f, %f, %f, %f, %f]\n",
                     trks.track_id[i], i, trks.x[i], trks.y[i], trks.s[i], trks.r[i], trks.dx[i], trks.dy[i], trks.ds[i]);
             printf("Last Observation x=%f\n", trks.latest_obs[i][0]);
@@ -174,10 +174,11 @@ compute_momentum_cost(
     // Momentum Similarity
     *angle_diff = t->vx[i] * delta_x + t->vy[i] * delta_y;
 
-    /* // Clamp to [-1.0f, 1.0f], potential NaN
+    // Clamp to [-1.0f, 1.0f], potential NaN
+    // Upon taylor expansion this might not be relevant
     *angle_diff = fminf(1.0f, fmaxf(-1.0f, *angle_diff));
-    */
 
+    printf("%f ", *angle_diff);
     *angle_diff = acosf(*angle_diff);
     *angle_diff = 0.5f  - (*angle_diff / M_PI_F);
 }
@@ -225,9 +226,9 @@ int OCSortSoA::update(struct Detection *AoSdets, uint16_t AoSdets_len) {
     }
 
     
-    printf("Bupdate trks.ds T[23]id%d ds = %f\n", trks.track_id[23], trks.ds[23]);
+    // printf("Bupdate trks.ds T[23]id%d ds = %f\n", trks.track_id[23], trks.ds[23]);
     update_unmatched_tracks();
-    printf("trks.ds T[23]id%d ds = %f\n", trks.track_id[23], trks.ds[23]);
+    // printf("trks.ds T[23]id%d ds = %f\n", trks.track_id[23], trks.ds[23]);
 
     create_new_tracks();
     
@@ -286,7 +287,7 @@ void OCSortSoA::compute_first_cost(void) {
             // }
             // printf("%f ", -(iou + angle_diff));
             // printf("%f ", angle_diff);
-            printf("%f ", iou);
+            // printf("%f ", iou);
         }
         printf("\n");
     }
