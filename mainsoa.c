@@ -23,6 +23,8 @@
  * - 0019, on frames 351, the matching lines are 668 to 658
  */
 
+#define WARMUP_FRAMES   80  // Empirical Value
+
 long int
 count_detections_in_frame(
     struct Detection *dets, 
@@ -56,6 +58,7 @@ void MOTManager::run(OCSortSoA& ocsort, struct Detection *dets, long int dets_le
 
     // Timing
     struct timespec tstart, tend;
+    long ttotal = 0;
     long elapsedTimePerFrame = 0;
     
     for(frame_id = 0; 1; frame_id++) {
@@ -76,12 +79,18 @@ void MOTManager::run(OCSortSoA& ocsort, struct Detection *dets, long int dets_le
         dets_offset += frame_dets_len;
 
         // Timing ns
-        elapsedTimePerFrame += (tend.tv_sec - tstart.tv_sec) * 1000000000L +
-            (tend.tv_nsec - tstart.tv_nsec);
+        if (frame_id > WARMUP_FRAMES) {
+            elapsedTimePerFrame = (tend.tv_sec - tstart.tv_sec) * 1000000000L +
+                                  (tend.tv_nsec - tstart.tv_nsec);
+            ttotal += elapsedTimePerFrame;
+        }
 
     }
-    elapsedTimePerFrame = elapsedTimePerFrame / ((long) frame_id);
-    printf("Average Time SoA: %ldns\n", elapsedTimePerFrame);
+    
+    if (frame_id > WARMUP_FRAMES) {
+        ttotal = ttotal / ((long) frame_id - WARMUP_FRAMES);
+        printf("Average Time SoA: %ldns\n", ttotal);
+    }
 }
 
 int main(int argc, char *argv[]) {
