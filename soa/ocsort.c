@@ -55,7 +55,7 @@ void OCSortSoA::predict_trks(void) {
     
     for (int i = 0; i < active_trks; i++) {
         
-        if (trks.track_id[i] == 24) {
+        if (trks.track_id[i] == 142) {
             printf("XYSR T%d[%d]: [%f, %f, %f, %f, %f, %f, %f]\n",
                     trks.track_id[i], i, trks.x[i], trks.y[i], trks.s[i], trks.r[i], trks.dx[i], trks.dy[i], trks.ds[i]);
             printf("Last Observation x=%f\n", trks.latest_obs[i][0]);
@@ -195,18 +195,17 @@ int OCSortSoA::update(struct Detection *AoSdets, uint16_t AoSdets_len) {
 
     frame_count++;
 
-    printf("F%d:\n----\n", frame_count - 1);
+    printf("F%d: dets in count %d:\n----\n", frame_count - 1, AoSdets_len);
 
     if (0 == AoSdets_len) { 
         return 0;
     }
+
+    // frame_count++; BUG?
+    // this is were the official implementation counts frames, which is kind of
+    // a safe guard, avoiding the blow up of covariance.
     
     dets_len = prune_low_conf_dets(cfg.det_thresh, AoSdets, AoSdets_len);
-
-    // Re-check if there are any left detections left after triming low score ones
-    if (0 == dets_len) {  
-        return 0;
-    }
 
     unmatched_dets_count = 0;
     unmatched_trks_count = 0;
@@ -256,7 +255,7 @@ void OCSortSoA::compute_first_cost(void) {
     for (i = 0; i < active_trks; i++) {
 
         // printf("t%d: %f %p\n", trks.track_id[i], trks.latest_obs[i][0], trks.latest_obs[i]);
-        // printf("T%d:", trks.track_id[i]);
+        printf("T%02d:", trks.track_id[i]);
 
         for (j = 0; j < dets_len; j++) {
 
@@ -287,8 +286,9 @@ void OCSortSoA::compute_first_cost(void) {
             // }
             // printf("%f ", -(iou + angle_diff));
             // printf("%f ", angle_diff);
+            printf("%f ", iou);
         }
-        // printf("\n");
+        printf("\n");
     }
 
 }
@@ -598,14 +598,14 @@ void OCSortSoA::first_association(void) {
             }
 
             matrix_idx = trk_idx * dets_len + det_idx;
-            printf("T%d -> D %d: x = %f ", trks.track_id[trk_idx], det_idx, dets.raw[det_idx].x1);
+            printf("T%02d -> D %d: x = %f ", trks.track_id[trk_idx], det_idx, dets.raw[det_idx].x1);
             if (iou_matrix[matrix_idx] < cfg.iou_threshold) {
-                printf("Rejected, iou %f\n", iou_matrix[matrix_idx]);
+                printf("N, iou %f\n", iou_matrix[matrix_idx]);
                 unmatched_trks[unmatched_trks_count++] = trk_idx;
                 unmatched_dets[unmatched_dets_count++] = det_idx;
             } else {
-                printf("Accepted\n");
-               update_trk(trk_idx, det_idx);
+                printf("Y, iou %f\n", iou_matrix[matrix_idx]);
+                update_trk(trk_idx, det_idx);
             }
         }
     }
