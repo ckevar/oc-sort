@@ -9,6 +9,20 @@
 
 #include "soa/ocsort.h"
 
+/* NOTE:
+ * Because we are using the hungarian algorithm and not the lap algorithm
+ * which is a greedy algorithm, it creates some discrepancies
+ * KITTI:
+ * - Sequence 0001(mitigated with lower bound)
+ * - Seq 0019 (1 case) and 0009 (2 cases), present IDswitches
+ *
+ * Double vs Float
+ * - Sequence 0007, ID19 @ Frame 42, iou (python) 0.299, (c) 0.300, threshold = 0.3
+ * Pending:
+ * - 0009,on frames 698 and 700, the matching lines are weird
+ * - 0019, on frames 351, the matching lines are 668 to 658
+ */
+
 long int
 count_detections_in_frame(
     struct Detection *dets, 
@@ -65,7 +79,6 @@ void MOTManager::run(OCSortSoA& ocsort, struct Detection *dets, long int dets_le
         elapsedTimePerFrame += (tend.tv_sec - tstart.tv_sec) * 1000000000L +
             (tend.tv_nsec - tstart.tv_nsec);
 
-        if (226 == frame_id) break;
     }
     elapsedTimePerFrame = elapsedTimePerFrame / ((long) frame_id);
     printf("Average Time SoA: %ldns\n", elapsedTimePerFrame);

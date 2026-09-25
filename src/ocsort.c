@@ -44,10 +44,11 @@ char OCSort::isValid(void) {
 void MK_OCSORT_DEFAULT_CONFIG(OCSORTcfg *cfg) {
     cfg->max_age        = 30;
     cfg->min_hits      = 3;
-    cfg->iou_threshold  = 0.3;
-    cfg->det_thresh     = 0.5;
+    cfg->iou_threshold  = 0.3f;
+    cfg->det_thresh     = 0.5f;
     cfg->delta_t        = 3;
-    cfg->inertia        = 0.2;
+    cfg->inertia        = 0.2f;
+    cfg->iou_lower_bound = cfg.threshold / 3.0f;
 }
 
 int prune_low_conf_dets(float th, struct Detection *dets, int dets_len) {
