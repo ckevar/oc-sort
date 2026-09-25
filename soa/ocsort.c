@@ -55,7 +55,7 @@ void OCSortSoA::predict_trks(void) {
     
     for (int i = 0; i < active_trks; i++) {
         
-        if (trks.track_id[i] == 62) {
+        if (trks.track_id[i] == 93) {
             printf("XYSR T%d[%d]: [%f, %f, %f, %f, %f, %f, %f]\n",
                     trks.track_id[i], i, trks.x[i], trks.y[i], trks.s[i], trks.r[i], trks.dx[i], trks.dy[i], trks.ds[i]);
             printf("Last Observation x=%f\n", trks.latest_obs[i][0]);
@@ -178,7 +178,6 @@ compute_momentum_cost(
     // Upon taylor expansion this might not be relevant
     *angle_diff = fminf(1.0f, fmaxf(-1.0f, *angle_diff));
 
-    printf("%f ", *angle_diff);
     *angle_diff = acosf(*angle_diff);
     *angle_diff = 0.5f  - (*angle_diff / M_PI_F);
 }
@@ -287,7 +286,7 @@ void OCSortSoA::compute_first_cost(void) {
             // }
             // printf("%f ", -(iou + angle_diff));
             // printf("%f ", angle_diff);
-            // printf("%f ", iou);
+            printf("%f ", iou);
         }
         printf("\n");
     }
@@ -778,6 +777,7 @@ void OCSortSoA::trackcpy(unsigned dest_i, unsigned src_i) {
     trks.frozen_x[dest_i] = trks.frozen_x[src_i];
     trks.frozen_y[dest_i] = trks.frozen_y[src_i];
     trks.frozen_s[dest_i] = trks.frozen_s[src_i];
+    trks.frozen_ds[dest_i] = trks.frozen_ds[src_i];
 
     trks.x1[dest_i] = trks.x1[src_i];
     trks.x2[dest_i] = trks.x2[src_i];
