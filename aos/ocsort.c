@@ -10,17 +10,13 @@ struct Track OCSortAoS::trks[MAX_TRACKS];
 
 int OCSortAoS::update(struct Detection *raw_dets, uint16_t raw_dets_len) {
     frame_count++;
-    printf("\n> F%03d | \n-------+\n", frame_count - 1);
+    // printf("\n> F%03d | \n-------+\n", frame_count - 1);
 
     if(0 == raw_dets_len) {
         return 0;
     }
 
     dets_len = prune_low_conf_dets(cfg.det_thresh, raw_dets, raw_dets_len);
-
-    if (0 == dets_len) {
-        return 0;
-    }
 
     unmatched_dets_count = 0;
     unmatched_trks_count = 0;
@@ -72,11 +68,6 @@ void OCSortAoS::predict_trks(void) {
     
     for (int i = 0; i < active_trks; i++) {
         // TODO: optimize this "if" condition
-        if (trks[i].track_id == 109) {
-        printf("XYSR T%d: [%f, %f, %f, %f]\n", 
-               trks[i].track_id, trks[i].x, trks[i].y, trks[i].s, trks[i].r);
-        }
- 
         if (trks[i].s + trks[i].ds <= 0.0f) {
             trks[i].ds = 0.0f;
         }
@@ -151,12 +142,11 @@ compute_momentum_cost(
     *angle_diff = t->vx * delta_x + t->vy* delta_y;
 
     // TRUE angle_diff {
-    // *angle_diff = fminf(1.0f, fmaxf(-1.0f, *angle_diff)); //
+    *angle_diff = fminf(1.0f, fmaxf(-1.0f, *angle_diff)); //
     *angle_diff = acosf(*angle_diff);
     *angle_diff = 0.5f  - (*angle_diff / M_PI_F); // = asinf(*angle_diff) / M_PI_F;
     // }
     
-
 
     // angle_diff approximations
     // *angle_diff = fminf(1.0f, fmaxf(-1.0f, *angle_diff));
@@ -186,19 +176,20 @@ void OCSortAoS::compute_first_cost(void) {
         for (j = 0; j < dets_len; j++) {
             //--- IoU
             compute_iou(&iou, &dets[j], &trks[i]);
+            iou = (iou < cfg.iou_lower_bound) ? 0.0f : iou;
             index = (i * dets_len) + j;
             iou_matrix[index] = iou;
 
-             // if (iou < cfg.iou_threshold) {
-             //    cost_matrix[index] = -iou + 1.2f;
-             // } else {
-              //--- Momentum Cost
-              compute_momentum_cost(&angle_diff, &dets[j], &trks[i]);
-              angle_diff = angle_diff * cfg.inertia * dets[j].raw->score;
+            // if (iou < cfg.iou_threshold) {
+            //    cost_matrix[index] = -iou + 1.2f;
+            // } else {
+            //--- Momentum Cost
+            compute_momentum_cost(&angle_diff, &dets[j], &trks[i]);
+            angle_diff = angle_diff * cfg.inertia * dets[j].raw->score;
 
-              //-- Fill the matrices
-              cost_matrix[index] = -(iou + angle_diff) + 1.2f;
-              iou_matrix[index] = iou;
+            //-- Fill the matrices
+            cost_matrix[index] = -(iou + angle_diff) + 1.2f;
+            iou_matrix[index] = iou;
             // }
         }
     }
@@ -281,13 +272,13 @@ void OCSortAoS::update_trk_observations(struct Track *t, float *det_raw) {
 }
 
 void OCSortAoS::freeze_state(struct Track *t) {
-    memcpy(t->frozen_state, t->xysrbox, sizeof(t->frozen_state));   // Only three states are frozen
+    memcpy(t->frozen_state, t->xysrbox, sizeof(t->frozen_state));   // Only 4 states are frozen
+    t->frozen_ds = t->ds;
 
     // NOTE: This are maintained because they aren't predicted
     // t->frozen_r  = t->r;
     // t->frozen_dx = t->dx;
     // t->frozen_dy = t->dy;
-    // t->frozen_ds = t->ds;
     memcpy(t->frozen_covariance, 
            t->covariance, 
            KF_NUM_COV_COMPACT * sizeof(float));
@@ -296,8 +287,10 @@ void OCSortAoS::freeze_state(struct Track *t) {
 void OCSortAoS::unfreeze_state(struct Track *t, struct DetectionAoS *d) {
     // 1. copy back the frozen values
     memcpy(t->xysrbox, t->frozen_state, sizeof(t->frozen_state));
-    // NOTE: Remaining states (r, dx, dy, ds) are never modified during prediction
+    t->ds = t->frozen_ds;
+    // NOTE: Remaining states (r, dx, dy) are never modified during prediction
     // because of the constant velocity model.
+
     memcpy(t->covariance, 
            t->frozen_covariance, 
            KF_NUM_COV_COMPACT * sizeof(float));
@@ -459,14 +452,11 @@ int OCSortAoS::compute_second_cost(void) {
     iou_max = 0.0f;
 
     for (i = 0; i < unmatched_trks_count; i++) {
-
         for (j = 0; j < unmatched_dets_count; j++) {
             iou = compute_iou_lastest_obs(&dets[unmatched_dets[j]], trks[unmatched_trks[i]].latest_obs);
             index = (i * unmatched_dets_count) + j;
             cost_matrix[index] = -iou + 1.0f; // Biasing this is important to solve hungarian
-
-            if (iou > iou_max) iou_max = iou;
-
+            iou_max = fmaxf(iou_max, iou);
         }
     }
 
@@ -623,14 +613,22 @@ void OCSortAoS::create_new_tracks(void) {
                 sizeof(TRK_TEMPLATE.xysrbox));
 
         memcpy(trks[active_trks].xyxybox, 
-                dets[det_idx].raw->xyxybox,    // Ignore the first field (Frame ID) 
+                dets[det_idx].raw->xyxybox, 
                 sizeof(TRK_TEMPLATE.xyxybox));
-                                                       
+
+        trks[active_trks].latest_obs = trks[active_trks].observations[0];
+                                                      
         // NOTE: future trks[active_trks].class_id = 0;
         trks[active_trks].track_id = ID_manager;
         ID_manager++;
         active_trks++;
     }
+}
+
+void OCSortAoS::trackcpy(unsigned dest_i, unsigned src_i) {
+    trks[dest_i] = trks[src_i];
+    int offset = trks[src_i].latest_obs - (float *)trks[src_i].observations;
+    trks[dest_i].latest_obs = (float *)trks[dest_i].observations + offset;
 }
 
 int OCSortAoS::export_and_prune_tracks(void) {
@@ -655,7 +653,7 @@ int OCSortAoS::export_and_prune_tracks(void) {
         // Prune dead tracks
         if(t->time_since_update > cfg.max_age) {
             active_trks--;
-            trks[i] = trks[active_trks];
+            trackcpy(i, active_trks);
             i--;
         }
     }

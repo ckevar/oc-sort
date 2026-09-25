@@ -247,7 +247,14 @@ void OCSortSoA::compute_first_cost(void) {
 
             //--- IoU 
             compute_iou(&iou, &dets, j, &trks, i);  // Range: 0.0 to 1.0
-            if (iou < cfg->iou_lower_bound) iou = 0.0f; // we need to remove 0.05
+            iou = (iou < cfg.iou_lower_bound) ? 0.0f : iou; // Tiny IoU alters
+                                                            // the cost in a way 
+                                                            // that creates IDsw
+                                                            // unlike python's 
+                                                            // implementation that
+                                                            // relies on a greedy
+                                                            // algorithm this one
+                                                            // uses hungarian one.
 
             //--- Momentum Cost
             compute_momentum_cost(&angle_diff, &dets, j, &trks, i);     // Range: -0.5 to 0.5

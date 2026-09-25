@@ -11,6 +11,7 @@ typedef struct {
     int max_age;
     int min_hits;
     float iou_threshold;
+    float iou_lower_bound;
     float det_thresh;
     int delta_t;    // For mod operations is better to keep them as `int`
     float inertia;

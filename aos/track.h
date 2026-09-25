@@ -45,7 +45,7 @@ struct Track {
     uint8_t kf_observed_flag;
     
     union {
-        struct {float frozen_x, frozen_y, frozen_s;};
+        struct {float frozen_x, frozen_y, frozen_s, frozen_ds;};
         float frozen_state[3];               // Given the nature of this kalman, only the initial states
                                             // are required to be predicted, the remaining states are
                                             // maintained constant when frozen.
