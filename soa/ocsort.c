@@ -168,9 +168,18 @@ compute_momentum_cost(
     // Momentum Similarity
     *angle_diff = t->vx[i] * delta_x + t->vy[i] * delta_y;
 
+    // TRUE angle_diff {
+    //*angle_diff = fminf(1.0f, fmaxf(-1.0f, *angle_diff));
+    //*angle_diff = acosf(*angle_diff);
+    //*angle_diff = 0.5f  - (*angle_diff / M_PI_F);
+    // }
+
+    // angle_diff Approximation {
     *angle_diff = fminf(1.0f, fmaxf(-1.0f, *angle_diff));
-    *angle_diff = acosf(*angle_diff);
-    *angle_diff = 0.5f  - (*angle_diff / M_PI_F);
+    float x2 = (*angle_diff) * (*angle_diff);
+    // 3. Taylor expansion: tail adjustment
+       *angle_diff = (*angle_diff) * (0.318310f + x2 * (0.053052f + x2 * 0.128638f));
+    // }
 }
 
 // --- End First Association Cost

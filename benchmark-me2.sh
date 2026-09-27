@@ -1,4 +1,4 @@
-EXP_NAME="BASELINE"
+EXP_NAME="NO_ArcCosine"
 
 function time_me {
     local BIN_UNDER_TEST="$1"
@@ -36,6 +36,7 @@ function profile_me {
 DIR_NAME="benchmark/results/$EXP_NAME"
 mkdir -p "$DIR_NAME"
 
+echo "Experiment runnings $EXP_NAME, output files on $DIR_NAME"
 
 # Timing
 TIMING_FILE="$DIR_NAME/timing.log"

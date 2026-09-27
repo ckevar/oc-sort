@@ -1,0 +1,1102 @@
+--------------------------------------------------------------------------------
+-- Metadata
+--------------------------------------------------------------------------------
+Invocation:       /usr/bin/cg_annotate --show=Dr,D1mr,Bcm benchmark/results/NO_ArcCosine/cachegrind.soa.out
+I1 cache:         65536 B, 64 B, 8-way associative
+D1 cache:         32768 B, 64 B, 8-way associative
+LL cache:         35651584 B, 64 B, 17-way associative
+Command:          ./soa.bin dets/dets_500.bin
+Events recorded:  Ir I1mr ILmr Dr D1mr DLmr Dw D1mw DLmw Bc Bcm Bi Bim
+Events shown:     Dr D1mr Bcm
+Event sort order: Ir I1mr ILmr Dr D1mr DLmr Dw D1mw DLmw Bc Bcm Bi Bim
+Threshold:        0.1%
+Annotation:       on
+
+--------------------------------------------------------------------------------
+-- Summary
+--------------------------------------------------------------------------------
+Dr____________________ D1mr______________ Bcm_______________ 
+
+2,418,126,799 (100.0%) 8,679,444 (100.0%) 5,778,504 (100.0%)  PROGRAM TOTALS
+
+--------------------------------------------------------------------------------
+-- File:function summary
+--------------------------------------------------------------------------------
+  Dr__________________________ D1mr____________________ Bcm_____________________  file:function
+
+< 1,600,581,395 (66.2%, 66.2%) 5,105,951 (58.8%, 58.8%) 1,709,560 (29.6%, 29.6%)  /home/chris/Documents/phd/code/ccode/oc-sort/soa/ocsort.c:
+  1,593,295,492 (65.9%)        4,684,548 (54.0%)        1,707,505 (29.5%)           OCSortSoA::compute_first_cost()
+      2,583,000  (0.1%)          128,427  (1.5%)            1,369  (0.0%)           OCSortSoA::update_trk(int, int)
+
+<   400,414,706 (16.6%, 82.7%) 3,123,283 (36.0%, 94.8%)   299,681  (5.2%, 34.8%)  /home/chris/Documents/phd/code/ccode/oc-sort/src/hungarian.c:
+    400,413,114 (16.6%)        3,122,885 (36.0%)          299,681  (5.2%)           _flinearsolver(int*, float*, int, int)
+
+<   106,643,139  (4.4%, 87.2%)     2,400  (0.0%, 94.8%) 2,374,462 (41.1%, 75.9%)  ./stdio-common/./stdio-common/printf_fp.c:
+     66,629,312  (2.8%)            2,200  (0.0%)        2,129,159 (36.8%)           __printf_fp_buffer_1.isra.0
+     33,213,827  (1.4%)                0                  245,299  (4.2%)           hack_digit
+      6,800,000  (0.3%)              200  (0.0%)                4  (0.0%)           __printf_fp_l_buffer
+
+<    49,750,000  (2.1%, 89.2%)         0  (0.0%, 94.8%)       265  (0.0%, 75.9%)  ./math/../sysdeps/x86_64/fpu/s_fmaxf.S:fmaxf
+
+<    49,750,000  (2.1%, 91.3%)         0  (0.0%, 94.8%)         8  (0.0%, 75.9%)  ./math/../sysdeps/x86_64/fpu/s_fminf.S:fminf
+
+<   103,119,207  (4.3%, 95.5%)     1,676  (0.0%, 94.9%)       415  (0.0%, 75.9%)  ???:
+    103,113,464  (4.3%)            1,554  (0.0%)               43  (0.0%)           ???
+
+<    26,963,946  (1.1%, 96.7%)         0  (0.0%, 94.9%)   304,568  (5.3%, 81.1%)  ./stdlib/./stdlib/divrem.c:__mpn_divrem
+
+<    13,100,040  (0.5%, 97.2%)     2,203  (0.0%, 94.9%)   100,629  (1.7%, 82.9%)  ./stdio-common/./stdio-common/vfprintf-internal.c:
+     11,800,027  (0.5%)            1,601  (0.0%)          100,345  (1.7%)           __printf_buffer
+
+<     8,980,241  (0.4%, 97.6%)         0  (0.0%, 94.9%)        14  (0.0%, 82.9%)  ./stdlib/../sysdeps/x86_64/mul_1.S:__mpn_mul_1
+
+<    12,716,414  (0.5%, 98.1%)         0  (0.0%, 94.9%)    10,948  (0.2%, 83.1%)  ./stdio-common/./stdio-common/Xprintf_buffer_write.c:__printf_buffer_write
+
+<     6,610,456  (0.3%, 98.4%)   180,432  (2.1%, 97.0%)   604,416 (10.5%, 93.5%)  ./string/../sysdeps/x86_64/multiarch/memmove-vec-unaligned-erms.S:
+      6,610,262  (0.3%)          180,429  (2.1%)          604,340 (10.5%)           __memcpy_avx_unaligned_erms
+
+<     4,799,024  (0.2%, 98.6%)         0  (0.0%, 97.0%)        42  (0.0%, 93.5%)  ./stdio-common/./stdio-common/vfprintf-process-arg.c:__printf_buffer
+
+<     5,970,004  (0.2%, 98.8%)   124,985  (1.4%, 98.4%)         0  (0.0%, 93.5%)  /home/chris/Documents/phd/code/ccode/oc-sort/src/kalman.c:
+      2,388,000  (0.1%)              199  (0.0%)                0                   CVKalmanFilter::update_P_with_K(float*, float*, float*)
+
+<     4,969,003  (0.2%, 99.0%)         1  (0.0%, 98.4%)        10  (0.0%, 93.5%)  ./stdlib/./stdlib/mul.c:__mpn_mul
+
+<     2,388,669  (0.1%, 99.1%)         0  (0.0%, 98.4%)       232  (0.0%, 93.5%)  ./stdlib/../sysdeps/x86_64/rshift.S:__mpn_rshift
+
+<     1,500,007  (0.1%, 99.2%)       401  (0.0%, 98.4%)    99,993  (1.7%, 95.3%)  ./string/../sysdeps/x86_64/multiarch/strchr-avx2.S:
+      1,500,004  (0.1%)              401  (0.0%)           99,992  (1.7%)           __strchrnul_avx2
+
+<     4,975,000  (0.2%, 99.4%)    44,890  (0.5%, 98.9%)         0  (0.0%, 95.3%)  /home/chris/Documents/phd/code/ccode/oc-sort/soa/kalman.c:
+      3,184,000  (0.1%)           19,134  (0.2%)                0                   CVKalmanFilterSoA::update(float*, Tracks*, int)
+
+<       723,410  (0.0%, 99.4%)       200  (0.0%, 98.9%)    51,761  (0.9%, 96.2%)  ./stdio-common/./stdio-common/_itoa.c:_itoa_word
+
+<     2,365,161  (0.1%, 99.5%)         0  (0.0%, 98.9%)       649  (0.0%, 96.2%)  ./stdlib/./stdlib/cmp.c:__mpn_cmp
+
+<       400,000  (0.0%, 99.5%)         0  (0.0%, 98.9%)         2  (0.0%, 96.2%)  ./stdlib/../sysdeps/ieee754/dbl-64/dbl2mpn.c:__mpn_extract_double
+
+--------------------------------------------------------------------------------
+-- Function:file summary
+--------------------------------------------------------------------------------
+  Dr__________________________ D1mr____________________ Bcm_____________________  function:file
+
+> 1,593,295,492 (65.9%, 65.9%) 4,684,548 (54.0%, 54.0%) 1,707,505 (29.5%, 29.5%)  OCSortSoA::compute_first_cost():/home/chris/Documents/phd/code/ccode/oc-sort/soa/ocsort.c
+
+>   400,413,114 (16.6%, 82.4%) 3,122,885 (36.0%, 90.0%)   299,681  (5.2%, 34.7%)  _flinearsolver(int*, float*, int, int):/home/chris/Documents/phd/code/ccode/oc-sort/src/hungarian.c
+
+>    69,233,596  (2.9%, 85.3%)     2,200  (0.0%, 90.0%) 2,329,286 (40.3%, 75.0%)  __printf_fp_buffer_1.isra.0:
+     66,629,312  (2.8%)            2,200  (0.0%)        2,129,159 (36.8%)           ./stdio-common/./stdio-common/printf_fp.c
+
+>    49,750,000  (2.1%, 87.4%)         0  (0.0%, 90.0%)       265  (0.0%, 75.0%)  fmaxf:./math/../sysdeps/x86_64/fpu/s_fmaxf.S
+
+>    49,750,000  (2.1%, 89.4%)         0  (0.0%, 90.0%)         8  (0.0%, 75.0%)  fminf:./math/../sysdeps/x86_64/fpu/s_fminf.S
+
+>   103,113,464  (4.3%, 93.7%)     1,554  (0.0%, 90.0%)        43  (0.0%, 75.1%)  ???:
+    103,113,464  (4.3%)            1,554  (0.0%)               43  (0.0%)           ???
+
+>    26,963,946  (1.1%, 94.8%)         0  (0.0%, 90.0%)   304,568  (5.3%, 80.3%)  __mpn_divrem:./stdlib/./stdlib/divrem.c
+
+>    16,999,051  (0.7%, 95.5%)     1,601  (0.0%, 90.0%)   100,900  (1.7%, 82.1%)  __printf_buffer:
+     11,800,027  (0.5%)            1,601  (0.0%)          100,345  (1.7%)           ./stdio-common/./stdio-common/vfprintf-internal.c
+      4,799,024  (0.2%)                0                       42  (0.0%)           ./stdio-common/./stdio-common/vfprintf-process-arg.c
+
+>    33,213,827  (1.4%, 96.9%)         0  (0.0%, 90.0%)   245,299  (4.2%, 86.3%)  hack_digit:./stdio-common/./stdio-common/printf_fp.c
+
+>     8,980,241  (0.4%, 97.3%)         0  (0.0%, 90.0%)        14  (0.0%, 86.3%)  __mpn_mul_1:./stdlib/../sysdeps/x86_64/mul_1.S
+
+>    12,716,414  (0.5%, 97.8%)         0  (0.0%, 90.0%)    10,948  (0.2%, 86.5%)  __printf_buffer_write:
+     12,716,414  (0.5%)                0                   10,948  (0.2%)           ./stdio-common/./stdio-common/Xprintf_buffer_write.c
+
+>     6,610,262  (0.3%, 98.1%)   180,429  (2.1%, 92.1%)   604,340 (10.5%, 97.0%)  __memcpy_avx_unaligned_erms:./string/../sysdeps/x86_64/multiarch/memmove-vec-unaligned-erms.S
+
+>     8,000,000  (0.3%, 98.4%)       800  (0.0%, 92.1%)         4  (0.0%, 97.0%)  __printf_fp_l_buffer:
+      6,800,000  (0.3%)              200  (0.0%)                4  (0.0%)           ./stdio-common/./stdio-common/printf_fp.c
+
+>     4,969,003  (0.2%, 98.6%)         1  (0.0%, 92.1%)        10  (0.0%, 97.0%)  __mpn_mul:./stdlib/./stdlib/mul.c
+
+>     2,388,669  (0.1%, 98.7%)         0  (0.0%, 92.1%)       232  (0.0%, 97.0%)  __mpn_rshift:./stdlib/../sysdeps/x86_64/rshift.S
+
+>     1,500,004  (0.1%, 98.7%)       401  (0.0%, 92.1%)    99,992  (1.7%, 98.7%)  __strchrnul_avx2:./string/../sysdeps/x86_64/multiarch/strchr-avx2.S
+
+>     2,583,000  (0.1%, 98.9%)   128,427  (1.5%, 93.6%)     1,369  (0.0%, 98.7%)  OCSortSoA::update_trk(int, int):
+      2,583,000  (0.1%)          128,427  (1.5%)            1,369  (0.0%)           /home/chris/Documents/phd/code/ccode/oc-sort/soa/ocsort.c
+
+>     2,388,000  (0.1%, 99.0%)       199  (0.0%, 93.6%)         0  (0.0%, 98.7%)  CVKalmanFilter::update_P_with_K(float*, float*, float*):/home/chris/Documents/phd/code/ccode/oc-sort/src/kalman.c
+
+>       723,410  (0.0%, 99.0%)       200  (0.0%, 93.6%)    51,761  (0.9%, 99.6%)  _itoa_word:./stdio-common/./stdio-common/_itoa.c
+
+>     2,365,161  (0.1%, 99.1%)         0  (0.0%, 93.6%)       649  (0.0%, 99.6%)  __mpn_cmp:./stdlib/./stdlib/cmp.c
+
+>       400,000  (0.0%, 99.1%)         0  (0.0%, 93.6%)         2  (0.0%, 99.6%)  __mpn_extract_double:./stdlib/../sysdeps/ieee754/dbl-64/dbl2mpn.c
+
+>     3,184,000  (0.1%, 99.2%)    19,134  (0.2%, 93.8%)         0  (0.0%, 99.6%)  CVKalmanFilterSoA::update(float*, Tracks*, int):/home/chris/Documents/phd/code/ccode/oc-sort/soa/kalman.c
+
+--------------------------------------------------------------------------------
+-- Annotated source file: ./math/../sysdeps/x86_64/fpu/s_fmaxf.S
+--------------------------------------------------------------------------------
+Unannotated because one or more of these original files are unreadable:
+- ./math/../sysdeps/x86_64/fpu/s_fmaxf.S
+
+--------------------------------------------------------------------------------
+-- Annotated source file: ./math/../sysdeps/x86_64/fpu/s_fminf.S
+--------------------------------------------------------------------------------
+Unannotated because one or more of these original files are unreadable:
+- ./math/../sysdeps/x86_64/fpu/s_fminf.S
+
+--------------------------------------------------------------------------------
+-- Annotated source file: ./stdio-common/./stdio-common/Xprintf_buffer_write.c
+--------------------------------------------------------------------------------
+Unannotated because one or more of these original files are unreadable:
+- ./stdio-common/./stdio-common/Xprintf_buffer_write.c
+
+--------------------------------------------------------------------------------
+-- Annotated source file: ./stdio-common/./stdio-common/_itoa.c
+--------------------------------------------------------------------------------
+Unannotated because one or more of these original files are unreadable:
+- ./stdio-common/./stdio-common/_itoa.c
+
+--------------------------------------------------------------------------------
+-- Annotated source file: ./stdio-common/./stdio-common/printf_fp.c
+--------------------------------------------------------------------------------
+Unannotated because one or more of these original files are unreadable:
+- ./stdio-common/./stdio-common/printf_fp.c
+
+--------------------------------------------------------------------------------
+-- Annotated source file: ./stdio-common/./stdio-common/vfprintf-internal.c
+--------------------------------------------------------------------------------
+Unannotated because one or more of these original files are unreadable:
+- ./stdio-common/./stdio-common/vfprintf-internal.c
+
+--------------------------------------------------------------------------------
+-- Annotated source file: ./stdio-common/./stdio-common/vfprintf-process-arg.c
+--------------------------------------------------------------------------------
+Unannotated because one or more of these original files are unreadable:
+- ./stdio-common/./stdio-common/vfprintf-process-arg.c
+
+--------------------------------------------------------------------------------
+-- Annotated source file: ./stdlib/../sysdeps/ieee754/dbl-64/dbl2mpn.c
+--------------------------------------------------------------------------------
+Unannotated because one or more of these original files are unreadable:
+- ./stdlib/../sysdeps/ieee754/dbl-64/dbl2mpn.c
+
+--------------------------------------------------------------------------------
+-- Annotated source file: ./stdlib/../sysdeps/x86_64/mul_1.S
+--------------------------------------------------------------------------------
+Unannotated because one or more of these original files are unreadable:
+- ./stdlib/../sysdeps/x86_64/mul_1.S
+
+--------------------------------------------------------------------------------
+-- Annotated source file: ./stdlib/../sysdeps/x86_64/rshift.S
+--------------------------------------------------------------------------------
+Unannotated because one or more of these original files are unreadable:
+- ./stdlib/../sysdeps/x86_64/rshift.S
+
+--------------------------------------------------------------------------------
+-- Annotated source file: ./stdlib/./stdlib/cmp.c
+--------------------------------------------------------------------------------
+Unannotated because one or more of these original files are unreadable:
+- ./stdlib/./stdlib/cmp.c
+
+--------------------------------------------------------------------------------
+-- Annotated source file: ./stdlib/./stdlib/divrem.c
+--------------------------------------------------------------------------------
+Unannotated because one or more of these original files are unreadable:
+- ./stdlib/./stdlib/divrem.c
+
+--------------------------------------------------------------------------------
+-- Annotated source file: ./stdlib/./stdlib/mul.c
+--------------------------------------------------------------------------------
+Unannotated because one or more of these original files are unreadable:
+- ./stdlib/./stdlib/mul.c
+
+--------------------------------------------------------------------------------
+-- Annotated source file: ./string/../sysdeps/x86_64/multiarch/memmove-vec-unaligned-erms.S
+--------------------------------------------------------------------------------
+Unannotated because one or more of these original files are unreadable:
+- ./string/../sysdeps/x86_64/multiarch/memmove-vec-unaligned-erms.S
+
+--------------------------------------------------------------------------------
+-- Annotated source file: ./string/../sysdeps/x86_64/multiarch/strchr-avx2.S
+--------------------------------------------------------------------------------
+Unannotated because one or more of these original files are unreadable:
+- ./string/../sysdeps/x86_64/multiarch/strchr-avx2.S
+
+--------------------------------------------------------------------------------
+-- Annotated source file: /home/chris/Documents/phd/code/ccode/oc-sort/soa/kalman.c
+--------------------------------------------------------------------------------
+Dr____________ D1mr_________ Bcm 
+
+-- line 15 ----------------------------------------
+      .             .          .  //    deterministic and easy to compute.
+      .             .          .  //
+      .             .          .  
+      .             .          .  
+      .             .          .  
+      .             .          .  // --- Predict --
+      .             .          .  
+      .             .          .  
+      0             0          0  void CVKalmanFilterSoA::predict_soa(struct Tracks *trks, int trk_i) {
+      .             .          .     
+199,000 (0.0%) 12,736 (0.1%)   0      trks->x[trk_i] += trks->dx[trk_i];
+199,000 (0.0%) 12,736 (0.1%)   0      trks->y[trk_i] += trks->dy[trk_i];
+199,000 (0.0%)      0          0      trks->s[trk_i] += trks->ds[trk_i];
+      .             .          .      // trks.r[trk_i]  = trks.r[trk_i];
+      .             .          .      // trks.dx[trk_i] = trks.dx[trk_i];
+      .             .          .      // trks.dy[trk_i] = trks.dy[trk_i];
+      .             .          .      // trks.ds[trk_i] = trks.ds[trk_i];
+      .             .          .  
+      .             .          .      // --- Predict Covariance ---
+      0             0          0      predict_Pi(trks->covariance[trk_i], 0);   
+      0             0          0      predict_Pi(trks->covariance[trk_i], 1);   
+      0             0          0      predict_Pi(trks->covariance[trk_i], 2);
+      0             0          0      for (int j = 0; j < KF_NUM_STATES; j++)
+597,000 (0.0%)    284 (0.0%)   0          trks->covariance[trk_i][j] += Q[j];
+      .             .          .      
+      .             .          .      // NOTE: ---
+      .             .          .      // Apparently we dont use P[4][4], P[5][5], nor P[6][6]. They keep stacking
+      .             .          .      // up, but their values are not relevant in the ultimate calculations of P
+      .             .          .      // or K, they seem to be a closed loop.
+      .             .          .      // ---------
+      .             .          .  
+597,000 (0.0%)      0          0  }
+      .             .          .  
+      .             .          .  // --- End Predict ---
+      .             .          .  
+      .             .          .  // --- Update ---
+      .             .          .  
+      .             .          .  void _update_state_with_K(struct Tracks *trks, int i, float *K, float *y) {
+398,000 (0.0%)      0          0      trks->x[i] += K[0] * y[0];
+298,500 (0.0%)      0          0      trks->y[i] += K[1] * y[1];
+298,500 (0.0%)      0          0      trks->s[i] += K[2] * y[2];
+298,500 (0.0%)      0          0      trks->r[i] += K[3] * y[3];
+      .             .          .  
+298,500 (0.0%)  6,378 (0.1%)   0      trks->dx[i] += K[4] * y[0];
+298,500 (0.0%)  6,378 (0.1%)   0      trks->dy[i] += K[5] * y[1];
+298,500 (0.0%)  6,378 (0.1%)   0      trks->ds[i] += K[6] * y[2];
+      .             .          .  }
+      .             .          .  
+      .             .          .  
+      .             .          .  
+ 99,500 (0.0%)      0          0  void CVKalmanFilterSoA::update(float *y, struct Tracks *trks, int trk_i) {
+      .             .          .      // Input:
+      .             .          .      // - y: Innovation Array, the difference between measured (z) and estimated (x): z - x,
+      .             .          .      // - trks: a struct of arrays, holding all tracks,
+      .             .          .      // - i: index of the track to be updated,
+      .             .          .      //
+      .             .          .      
+      .             .          .      float K[KF_NUM_STATES];
+      .             .          .      // 1. Update state X
+      .             .          .      // 1.1. Compute fast K:
+      0             0          0      compute_K_fast(K, trks->covariance[trk_i], R);
+      .             .          .  
+      .             .          .      // 1.2. Update Track States
+      .             .          .      _update_state_with_K(trks, trk_i, K, y);
+      .             .          .  
+      .             .          .      // 2. Update P having (K), there's another method that we can update P without K.
+      0             0          0      update_P_with_K(trks->covariance[trk_i], K, R);
+895,500 (0.0%)      0          0  }
+      .             .          .  // --- End Update
+      .             .          .  
+      .             .          .  
+      .             .          .  
+
+--------------------------------------------------------------------------------
+-- Annotated source file: /home/chris/Documents/phd/code/ccode/oc-sort/soa/ocsort.c
+--------------------------------------------------------------------------------
+Dr________________ D1mr_____________ Bcm______________ 
+
+-- line 15 ----------------------------------------
+          .                .                 .              float input[][OBS_LENGTH], 
+          .                .                 .              int16_t cur_age, 
+          .                .                 .              int16_t k, 
+          .                .                 .              float *last_obs) 
+          .                .                 .          {
+          .                .                 .              int16_t dt, target_age, observation_age;
+          .                .                 .              float *slot;
+          .                .                 .          
+          0                0                 2  (0.0%)      for(dt = k; dt > 0; dt--) {
+          .                .                 .                  target_age = cur_age - dt;
+          0                0                 0                  slot = input[target_age % k]; // int idx = (target_age % k + k) % k;
+    102,000 (0.0%)    93,265  (1.1%)         0                  observation_age = (int16_t) slot[OBS_AGE_INDEX];
+          0                0                18  (0.0%)          if (observation_age == target_age) {
+          0                0                 0                      return slot;
+          .                .                 .                  }
+          .                .                 .              }
+          .                .                 .              return last_obs;
+          .                .                 .          }
+          .                .                 .          
+          .                .                 .          inline void get_k_previous_observation(struct Tracks *t, int i, uint16_t k) {
+     99,500 (0.0%)    12,736  (0.1%)         0              t->momentum_obs[i] =  k_previous_obs(
+          .                .                 .                  t->observations[i],
+          .                .                 .                  t->age[i],
+          .                .                 .                  k,
+          .                .                 .                  t->latest_obs[i]);
+          .                .                 .          }
+          .                .                 .          
+          .                .                 .          void xysr_to_xyxy_soa(struct Tracks *trks, int i) {
+          .                .                 .              float w, h;
+    398,000 (0.0%)     6,368  (0.1%)         0              w = sqrtf(trks->s[i] * trks->r[i]);
+          0                0                 0              h = trks->s[i] / w;
+    199,000 (0.0%)        85  (0.0%)         0              w /= 2.0f;
+     99,500 (0.0%)         0                 0              h /= 2.0f;
+    199,000 (0.0%)         0                 0              trks->x1[i] = trks->x[i] - w;
+          0                0                 0              trks->x2[i] = trks->x[i] + w;
+    199,000 (0.0%)         0                 0              trks->y1[i] = trks->y[i] - h;
+          0                0                 0              trks->y2[i] = trks->y[i] + h;
+          .                .                 .          }
+          .                .                 .          
+          0                0                 0          void OCSortSoA::predict_trks(void) {
+          .                .                 .              
+     99,700 (0.0%)         0               211  (0.0%)      for (int i = 0; i < active_trks; i++) {
+          .                .                 .                  
+          .                .                 .                  // --- Predict state ---
+          .                .                 .                  // NOTE: This is the OC-SORT way to avoid overshooting, it works but it 
+          .                .                 .                  // might not be the best approach. The overshooting happens because upon 
+          .                .                 .                  // track creation the bounding box is started from the bounding box, this 
+          .                .                 .                  // leads the delta area `ds` to be predicted as really high, however in the
+          .                .                 .                  // update this is shrink down, because the are cannot grow that fast, and in
+          .                .                 .                  // the next prediction this speed gets shrunk down so negative that the 
+          .                .                 .                  // kalman filter just explodes.
+    199,000 (0.0%)    12,736  (0.1%)         8  (0.0%)          if (trks.s[i] + trks.ds[i] <= 0.0f) {
+          .                .                 .                      trks.ds[i] = 0.0f;
+          .                .                 .                  }
+          .                .                 .          
+     99,500 (0.0%)         0                 0                  kf.predict_soa(&trks, i);
+          .                .                 .                  
+     99,500 (0.0%)     3,184  (0.0%)         0                  trks.age[i] += 1;
+     99,500 (0.0%)     3,383  (0.0%)         0                  trks.time_since_update[i] += 1;
+          .                .                 .              
+          0                0                 8  (0.0%)          if (trks.time_since_update[i] > 1) {
+          .                .                 .                      // this means previously ~time_since_update~ = 0;
+          .                .                 .                      trks.hit_streak[i] = 0;
+          .                .                 .                  }
+          .                .                 .          
+          .                .                 .          
+          .                .                 .                  xysr_to_xyxy_soa(&trks, i);
+     99,500 (0.0%)         0                 0                  get_k_previous_observation(&trks, i, cfg.delta_t);
+          .                .                 .              }
+      1,394 (0.0%)       199  (0.0%)         0          }
+          .                .                 .          
+          .                .                 .          // --- End Prediction
+          .                .                 .          
+          .                .                 .          
+          .                .                 .          // --- Begin First Association Cost
+          .                .                 .          
+          .                .                 .          float compute_inter_area(
+          .                .                 .              struct Detection *d,
+          .                .                 .              struct Tracks *t, 
+          .                .                 .              int i)
+          .                .                 .          {
+          .                .                 .              float xmin, ymin, xmax, ymax;
+ 99,599,500 (4.1%) 1,125,912 (13.0%)         0              xmin = d->x1 > t->x1[i] ? d->x1 : t->x1[i];
+ 99,599,500 (4.1%)    47,259  (0.5%)         0              ymin = d->y1 > t->y1[i] ? d->y1 : t->y1[i];
+ 99,599,500 (4.1%)   748,698  (8.6%)         0              xmax = d->x2 < t->x2[i] ? d->x2 : t->x2[i];
+ 99,599,500 (4.1%)   405,935  (4.7%)         0              ymax = d->y2 < t->y2[i] ? d->y2 : t->y2[i]; 
+          .                .                 .              
+          0                0                 0              xmax -= xmin;
+          0                0                 0              ymax -= ymin;
+          .                .                 .          
+          0                0         1,083,298 (18.7%)      if ((xmax <= 0.0f) || (ymax <= 0.0f)) return 0.0f;
+          0                0                 0              return xmax * ymax;
+          .                .                 .          }
+          .                .                 .          
+          .                .                 .          inline void 
+          .                .                 .          compute_iou(
+          .                .                 .              float *iou, 
+          .                .                 .              struct DetectionSoA *d,  int j, 
+          .                .                 .              struct Tracks *t, int i) 
+          .                .                 .          {
+          .                .                 .              // ---
+          .                .                 .              // Computes IoU between detection and predicted bounding box.
+          .                .                 .              // ---
+          0                0                 0              float inter_area = compute_inter_area(&d->raw[j], t, i);
+ 99,599,500 (4.1%)   605,766  (7.0%)         0              *iou = inter_area / (d->area[j] + t->s[i] - inter_area);
+          .                .                 .          }
+          .                .                 .          
+          .                .                 .          float compute_inter_area_latest_obs(struct Detection *d, float *latest_obs) {
+          .                .                 .              float xmin, ymin, xmax, ymax;
+          .                .                 .              xmin = d->x1 > latest_obs[0] ? d->x1 : latest_obs[0];
+          .                .                 .              ymin = d->y1 > latest_obs[1] ? d->y1 : latest_obs[1];
+          .                .                 .              xmax = d->x2 < latest_obs[2] ? d->x2 : latest_obs[2];
+          .                .                 .              ymax = d->y2 < latest_obs[3] ? d->y2 : latest_obs[3];
+-- line 127 ----------------------------------------
+-- line 153 ----------------------------------------
+          .                .                 .          compute_momentum_cost(
+          .                .                 .              float *angle_diff,
+          .                .                 .              struct DetectionSoA *d, int j, 
+          .                .                 .              struct Tracks *t, int i)
+          .                .                 .          {
+          .                .                 .              // This functions ranges from -0.5 to 0.5
+          .                .                 .          
+          .                .                 .              // Intention of motion
+199,199,000 (8.2%)   700,374  (8.1%)         0              float delta_x = d->x[j] - (t->momentum_obs[i][2] + t->momentum_obs[i][0]) / 2.0f;
+199,000,000 (8.2%)   593,979  (6.8%)         0              float delta_y = d->y[j] - (t->momentum_obs[i][3] + t->momentum_obs[i][1]) / 2.0f;
+ 49,750,000 (2.1%)         0                 0              float norm = sqrtf(delta_x * delta_x + delta_y * delta_y) + 1e-6f;
+          .                .                 .          
+          0                0                 0              delta_x /= norm;
+          0                0                 0              delta_y /= norm;
+          .                .                 .          
+          .                .                 .              // Momentum Similarity
+ 99,798,500 (4.1%)   101,185  (1.2%)         0              *angle_diff = t->vx[i] * delta_x + t->vy[i] * delta_y;
+          .                .                 .          
+          .                .                 .              // TRUE angle_diff {
+          .                .                 .              //*angle_diff = fminf(1.0f, fmaxf(-1.0f, *angle_diff));
+          .                .                 .              //*angle_diff = acosf(*angle_diff);
+          .                .                 .              //*angle_diff = 0.5f  - (*angle_diff / M_PI_F);
+          .                .                 .              // }
+          .                .                 .          
+          .                .                 .              // angle_diff Approximation {
+ 99,500,000 (4.1%)       199  (0.0%)         0              *angle_diff = fminf(1.0f, fmaxf(-1.0f, *angle_diff));
+          0                0                 0              float x2 = (*angle_diff) * (*angle_diff);
+          .                .                 .              // 3. Taylor expansion: tail adjustment
+149,250,000 (6.2%)         0                 0                 *angle_diff = (*angle_diff) * (0.318310f + x2 * (0.053052f + x2 * 0.128638f));
+          .                .                 .              // }
+          .                .                 .          }
+          .                .                 .          
+          .                .                 .          // --- End First Association Cost
+          .                .                 .          
+          .                .                 .          /******************************/
+          .                .                 .          /*    OC-SORT Refactoring     */
+          .                .                 .          /******************************/
+          .                .                 .          
+          .                .                 .          
+          .                .                 .          // TODO: change the structure name Detection to AoS_Detection, so we standardize
+          .                .                 .          //       `struct Detection` for SoA data structure.
+          0                0                 0          int OCSortSoA::update(struct Detection *AoSdets, uint16_t AoSdets_len) {
+          .                .                 .          
+        200 (0.0%)       200  (0.0%)         0              frame_count++;
+          .                .                 .          
+          .                .                 .              // printf("F%d: dets in count %d:\n----\n", frame_count - 1, AoSdets_len);
+          .                .                 .          
+          0                0                 2  (0.0%)      if (0 == AoSdets_len) { 
+          .                .                 .                  return 0;
+          .                .                 .              }
+          .                .                 .          
+          .                .                 .              // frame_count++; BUG?
+          .                .                 .              // this is were the official implementation counts frames, which is kind of
+          .                .                 .              // a safe guard, avoiding the blow up of covariance.
+          .                .                 .              
+        200 (0.0%)         2  (0.0%)         0              dets_len = prune_low_conf_dets(cfg.det_thresh, AoSdets, AoSdets_len);
+          .                .                 .          
+          .                .                 .              unmatched_dets_count = 0;
+          0                0                 0              unmatched_trks_count = 0;
+          .                .                 .              
+          0                0                 0              det_AoS2SoA(&dets, AoSdets, dets_len);
+          .                .                 .              
+          0                0                 0              predict_trks();
+          .                .                 .          
+          0                0                 0              compute_first_cost();
+          .                .                 .          
+          0                0                 0              first_association();
+          .                .                 .          
+        200 (0.0%)       199  (0.0%)         3  (0.0%)      if ((unmatched_trks_count > 0) && (unmatched_dets_count > 0)) {
+          .                .                 .                  if (compute_second_cost()) {
+          .                .                 .                      second_association();
+          .                .                 .                  }
+          .                .                 .              }
+          .                .                 .          
+          .                .                 .              
+          .                .                 .              update_unmatched_tracks();
+          0                0                 0              create_new_tracks();
+          .                .                 .              
+          .                .                 .              // printf("  Active Tracks: %d\n  unmatched detections: %d\n  Unmatched Tracks %d\n  det len %d\n", 
+          .                .                 .              //        active_trks, unmatched_dets_count, unmatched_trks_count, dets_len);
+          0                0                 0              return export_and_prune_tracks();
+      1,200 (0.0%)       200  (0.0%)         0          }
+          .                .                 .          
+          0                0                 0          void OCSortSoA::compute_first_cost(void) {
+          .                .                 .              size_t j, index;
+          .                .                 .              int i;
+          .                .                 .              float iou, angle_diff;
+          .                .                 .              
+          .                .                 .              /* TODO:
+          .                .                 .              fprintf(stderr, "[WARNING@FIRST COST]: Even though a computer can solve floating points; however, when deployed on FPGAs, these values have to be integers\n");
+          .                .                 .              */
+          .                .                 .          
+        200 (0.0%)         0                 1  (0.0%)      if (0 == active_trks) {
+          .                .                 .                  return;
+          .                .                 .              }
+          .                .                 .              
+          .                .                 .              // cost matrix is nxm = active_trks x dets_len
+    298,500 (0.0%)         0               204  (0.0%)      for (i = 0; i < active_trks; i++) {
+          .                .                 .          
+ 49,750,398 (2.1%)         0            99,502  (1.7%)          for (j = 0; j < dets_len; j++) {
+          .                .                 .          
+          .                .                 .                      //--- IoU 
+          .                .                 .                      compute_iou(&iou, &dets, j, &trks, i);  // Range: 0.0 to 1.0
+ 49,750,000 (2.1%)         0           524,500  (9.1%)              iou = (iou < cfg.iou_lower_bound) ? 0.0f : iou; // Tiny IoU alters
+          .                .                 .                                                                      // the cost in a way 
+          .                .                 .                                                                      // that creates IDsw
+          .                .                 .                                                                      // unlike python's 
+          .                .                 .                                                                      // implementation that
+          .                .                 .                                                                      // relies on a greedy
+          .                .                 .                                                                      // algorithm this one
+          .                .                 .                                                                      // uses hungarian one.
+          .                .                 .          
+          .                .                 .                      //--- Momentum Cost
+          .                .                 .                      compute_momentum_cost(&angle_diff, &dets, j, &trks, i);     // Range: -0.5 to 0.5
+ 99,500,000 (4.1%)   355,042  (4.1%)         0                      angle_diff = angle_diff * cfg.inertia * dets.raw[j].score;  // Range: -0.1 to 0.1
+          .                .                 .                      
+          .                .                 .                      //--- Fill the matrices
+          .                .                 .                      index = (i * dets_len) + j; 
+          .                .                 .          
+          .                .                 .                      // Then, cost matrix's range: -0.1 to 1.1, inverted: -1.1 to 0.1
+          .                .                 .                      //
+          .                .                 .                      // NOTE: 
+          .                .                 .                      // 1. The hungarian implementation can't handle negative numbers, 
+          .                .                 .                      //    so it is biased adding 1.2 (for safety reasons).
+          .                .                 .                      // 2. This also suggest we can quantize the cost, so it becomes a integer 
+          .                .                 .                      //    based matrix, which is smaller and faster to compute on constraint 
+          .                .                 .                      //    devices.
+          .                .                 .                      
+ 49,750,000 (2.1%)         0                 0                      iou_matrix[index] = iou;
+ 49,750,000 (2.1%)         0                 0                      cost_matrix[index] = -(iou + angle_diff) + 1.2f;
+          .                .                 .                  }
+          .                .                 .              }
+          .                .                 .          
+      1,394 (0.0%)       199  (0.0%)         0          }
+          .                .                 .          
+          .                .                 .          int OCSortSoA::compute_second_cost(void) {
+          .                .                 .              size_t i, j, index;
+          .                .                 .              float iou, iou_max;
+          .                .                 .          
+          .                .                 .              /* TODO:
+          .                .                 .              fprintf(stderr, "[WARNING@SECOND COST]: Even though a computer can solve floating points; however, when deployed on FPGAs, these values have to be integers\n");
+          .                .                 .              */
+-- line 294 ----------------------------------------
+-- line 382 ----------------------------------------
+          .                .                 .                  if (k < (time_gap - 1)) {
+          .                .                 .                      kf.predict_soa(&trks, i);
+          .                .                 .                  }
+          .                .                 .          
+          .                .                 .              }
+          .                .                 .          }
+          .                .                 .          // -- END Freezing / Unfreezing
+          .                .                 .          
+     99,500 (0.0%)         0                 0          void OCSortSoA::update_trk_state(int trk_idx, int det_idx) {
+          .                .                 .              float dz[4];    // Innovation array
+          .                .                 .              
+          .                .                 .              // Compute innovation
+    199,000 (0.0%)     6,405  (0.1%)         0              dz[0] = dets.x[det_idx]     - trks.x[trk_idx];
+    199,000 (0.0%)     6,410  (0.1%)         0              dz[1] = dets.y[det_idx]     - trks.y[trk_idx];
+    199,000 (0.0%)    12,746  (0.1%)         0              dz[2] = dets.area[det_idx]  - trks.s[trk_idx];
+    199,000 (0.0%)    12,945  (0.1%)         0              dz[3] = dets.ratio[det_idx] - trks.r[trk_idx];
+          .                .                 .          
+          .                .                 .              // update xywr bounding box
+          0                0                 0              kf.update(dz, &trks, trk_idx);
+          .                .                 .          
+          .                .                 .              // update (re-calculate) xyxy bounding box
+          .                .                 .              xysr_to_xyxy_soa(&trks, trk_idx);
+          .                .                 .          
+    696,500 (0.0%)         0                 0          }
+          .                .                 .          
+          .                .                 .          void speed_direction(
+          .                .                 .              struct Tracks *trk,
+          .                .                 .              unsigned trk_idx,
+          .                .                 .              struct DetectionSoA *dets,
+          .                .                 .              unsigned det_idx,
+          .                .                 .              float *prev_box)
+          .                .                 .          {
+    297,000 (0.0%)        69  (0.0%)         0              float c1x = (prev_box[0] + prev_box[2]) / 2.0;
+    198,000 (0.0%)         0                 0              float c1y = (prev_box[1] + prev_box[3]) / 2.0;
+          .                .                 .          
+     99,000 (0.0%)     6,336  (0.1%)         0              float dx = dets->x[det_idx] - c1x;
+     99,000 (0.0%)     6,336  (0.1%)         0              float dy = dets->y[det_idx] - c1y;
+          .                .                 .          
+          0                0                 0              float norm = sqrtf(dx * dx + dy * dy);
+          0                0                 0              trk->vx[trk_idx] = dx / norm;
+          0                0                 0              trk->vy[trk_idx] = dy / norm;
+          0                0                 0          }
+          .                .                 .          
+          .                .                 .          
+          .                .                 .          void compute_trk_velocities(
+          .                .                 .              struct Tracks *trks, 
+          .                .                 .              int trk_idx, 
+          .                .                 .              struct DetectionSoA *dets, 
+          .                .                 .              int det_idx,
+          .                .                 .              int k)
+          .                .                 .          {
+          .                .                 .              float *previous_box, *slot;
+          .                .                 .              int dt, target_age, cur_age, obs_age;
+          .                .                 .              
+     99,000 (0.0%)    12,682  (0.1%)         0              previous_box = trks->latest_obs[trk_idx];
+     99,000 (0.0%)     3,173  (0.0%)         0              cur_age = trks->age[trk_idx];
+          .                .                 .          
+          .                .                 .              // Search if there's any previous bbox
+          0                0                 0              for (dt = k; dt > 0; dt--) {
+          .                .                 .                  target_age = cur_age - dt;
+          .                .                 .          
+          0                0                 0                  slot = trks->observations[trk_idx][target_age % k];
+    100,500 (0.0%)    92,641  (1.1%)         0                  obs_age = (int) slot[OBS_AGE_INDEX];
+          .                .                 .                  
+          0                0             1,365  (0.0%)          if(obs_age == target_age) {
+          0                0                 0                      previous_box = slot;
+          .                .                 .                      break;
+          .                .                 .                  }
+          .                .                 .              }
+          .                .                 .          
+          .                .                 .              speed_direction(trks, trk_idx, dets, det_idx, previous_box);
+          .                .                 .          }
+          .                .                 .          
+          .                .                 .          void OCSortSoA::update_trk_observations(int trk_idx, int det_idx) {
+          .                .                 .              int age_index;
+          .                .                 .              
+          .                .                 .              // NOTE: observations is age-based.
+    199,000 (0.0%)        16  (0.0%)         0              age_index = trks.age[trk_idx] % cfg.delta_t;
+          .                .                 .          
+          0                0                 0              memcpy(&trks.observations[trk_idx][age_index],
+     99,500 (0.0%)       199  (0.0%)         0                  dets.raw[det_idx].xyxybox,
+          .                .                 .                  OBS_NET_LENGTH * sizeof(float));
+          .                .                 .              
+          .                .                 .              
+    199,000 (0.0%)         0                 0              trks.observations[trk_idx][age_index][OBS_AGE_INDEX] = (float) trks.age[trk_idx];
+          0                0                 0              trks.latest_obs[trk_idx] = (float *) &trks.observations[trk_idx][age_index];
+          .                .                 .          
+          .                .                 .          }
+          .                .                 .          
+          .                .                 .          
+          0                0                 0          void OCSortSoA::update_trk(int trk_idx, int det_idx) {
+          0                0                 0              if (det_idx < 0) {
+          .                .                 .                  if ((1 == trks.time_since_update[trk_idx]) && (trks.age[trk_idx] > 1)) {
+          .                .                 .                      freeze_state(trk_idx);
+          .                .                 .                      trks.kf_observed_flag[trk_idx] = 1;
+          .                .                 .                  }
+          .                .                 .                  return;
+          .                .                 .          
+          .                .                 .              }
+          .                .                 .              
+          .                .                 .              // Check Previous Observation
+     99,500 (0.0%)     1,791  (0.0%)         4  (0.0%)      if (trks.latest_obs_available[trk_idx]) { 
+     99,000 (0.0%)         0                 0                  compute_trk_velocities(&trks, trk_idx, &dets, det_idx, cfg.delta_t);
+          .                .                 .              }
+          0                0                 0              trks.latest_obs_available[trk_idx] = 1;
+          .                .                 .          
+          .                .                 .              // Check if there is something frozen
+     99,500 (0.0%)     1,791  (0.0%)         0              if (trks.kf_observed_flag[trk_idx]) {
+          .                .                 .                  unfreeze_state(trk_idx, det_idx);
+          .                .                 .                  trks.kf_observed_flag[trk_idx] = 0;
+          .                .                 .              }
+          .                .                 .          
+          .                .                 .              // --- NOTE: ---
+          .                .                 .              // Python's version require three addtional updates but they seem unnecesary
+          .                .                 .              // 1. history_observations array: Only used in the "public" version of oc-sort, but never called. It stores the lastest bounding boxes infinetely.
+          .                .                 .              // 2. hist array: there is a hist array here that stores the arrays, but it seems to be for debugging purposes only, because it is never actually used.
+          .                .                 .              // 3. hits counter: updated but never used.
+          .                .                 .              // --- END ---
+          .                .                 .              
+          0                0                 0              update_trk_state(trk_idx, det_idx);
+          .                .                 .              update_trk_observations(trk_idx, det_idx);
+          .                .                 .          
+          0                0                 0              trks.time_since_update[trk_idx] = 0;
+     99,500 (0.0%)     3,393  (0.0%)         0              trks.hit_streak[trk_idx]++;
+    696,500 (0.0%)         0                 0          }
+          .                .                 .          
+          0                0                 0          void OCSortSoA::first_association(void) {
+          .                .                 .              unsigned i, len;
+          .                .                 .              int row, trk_idx, det_idx, matrix_idx;
+          .                .                 .              char isTransposed;
+          .                .                 .          
+        200 (0.0%)         0                 0              if (0 == active_trks) {
+        202 (0.0%)         1  (0.0%)         8  (0.0%)          for (unmatched_dets_count = 0; unmatched_dets_count < dets_len; unmatched_dets_count++) {
+          0                0                 0                      unmatched_dets[unmatched_dets_count] = unmatched_dets_count;
+          .                .                 .                  }
+          .                .                 .                  return;
+          .                .                 .              }
+          .                .                 .          
+          .                .                 .              // NOTE: in OC-SORT, there's a trick here to check if we need to compute
+          .                .                 .              // the hungarian filter based on the IoU threshold. This new matrix has 
+          .                .                 .              // the same shape as the cost matrix and it is build on 
+          .                .                 .              
+          0                0                 0              isTransposed = flinearsolver(matched, cost_matrix, active_trks, dets_len);
+        199 (0.0%)       199  (0.0%)         0              len = isTransposed ? active_trks:dets_len;
+          .                .                 .          
+          0                0               199  (0.0%)      for(i = 1; i <= len; i++) {
+     99,500 (0.0%)     6,169  (0.1%)         0                  row = matched[i];
+          .                .                 .          
+          0                0                 0                  if (0 == row) {
+          0                0                 0                      if (isTransposed) unmatched_trks[unmatched_trks_count++] = i - 1;
+          .                .                 .                      else              unmatched_dets[unmatched_dets_count++] = i - 1;
+          .                .                 .                  } else {
+          .                .                 .                      if (isTransposed) {
+          .                .                 .                          trk_idx = i - 1; 
+          0                0                 0                          det_idx = row - 1;
+          .                .                 .                      } else {
+          .                .                 .                          trk_idx = row - 1;
+          .                .                 .                          det_idx = i - 1;
+          .                .                 .                      }
+          .                .                 .          
+     99,500 (0.0%)         0                 0                      matrix_idx = trk_idx * dets_len + det_idx;
+    199,000 (0.0%)    99,500  (1.1%)         4  (0.0%)              if (iou_matrix[matrix_idx] < cfg.iou_threshold) {
+          0                0                 0                          unmatched_trks[unmatched_trks_count++] = trk_idx;
+          .                .                 .                          unmatched_dets[unmatched_dets_count++] = det_idx;
+          .                .                 .                      } else {
+          0                0                 0                          update_trk(trk_idx, det_idx);
+          .                .                 .                      }
+          .                .                 .                  }
+          .                .                 .              }
+          .                .                 .              
+      1,400 (0.0%)       199  (0.0%)         0          }
+          .                .                 .          
+          .                .                 .          void OCSortSoA::second_association(void) {
+          .                .                 .              unsigned i, len;
+          .                .                 .              int row, trk_idx, det_idx, matrix_idx;
+          .                .                 .              char isTransposed;
+          .                .                 .              float iou;
+          .                .                 .           
+          .                .                 .              // NOTE: unlike the previous association, the trick is not used here, but 
+-- line 560 ----------------------------------------
+-- line 609 ----------------------------------------
+          .                .                 .          }
+          .                .                 .          
+          .                .                 .          void OCSortSoA::update_unmatched_tracks(void) {
+          .                .                 .              for (unsigned i = 0; i < unmatched_trks_count; i++) {
+          .                .                 .                  update_trk(unmatched_trks[i], -1);
+          .                .                 .              }
+          .                .                 .          }
+          .                .                 .          
+          0                0                 0          void OCSortSoA::create_new_tracks(void) {
+          .                .                 .              unsigned i, j, det_idx;
+          .                .                 .              
+        700 (0.0%)         0                 6  (0.0%)      for (i = 0; i < unmatched_dets_count; i++) {
+          .                .                 .                  // 1. Initialize Track's state
+          .                .                 .                  // ----------------------------
+          .                .                 .                  det_idx = unmatched_dets[i];
+      1,002 (0.0%)        55  (0.0%)         0                  trks.x[active_trks] = dets.x[det_idx];
+        500 (0.0%)        29  (0.0%)         0                  trks.y[active_trks] = dets.y[det_idx];
+        500 (0.0%)        31  (0.0%)         0                  trks.s[active_trks] = dets.area[det_idx];
+        500 (0.0%)        32  (0.0%)         0                  trks.r[active_trks] = dets.ratio[det_idx];
+          0                0                 0                  trks.dx[active_trks] = 0.0f;
+          0                0                 0                  trks.dy[active_trks] = 0.0f;
+          0                0                 0                  trks.ds[active_trks] = 0.0f;
+      1,000 (0.0%)       113  (0.0%)         0                  trks.x1[active_trks] = dets.raw[det_idx].x1;
+        500 (0.0%)        54  (0.0%)         0                  trks.x2[active_trks] = dets.raw[det_idx].x2;
+        500 (0.0%)         0                 0                  trks.y1[active_trks] = dets.raw[det_idx].y1;
+        500 (0.0%)        27  (0.0%)         0                  trks.y2[active_trks] = dets.raw[det_idx].y2;
+          .                .                 .           
+          .                .                 .                  // 2. Initialize Track's covariance
+          .                .                 .                  // ----------------------------
+          .                .                 .                  /* Legacy
+          .                .                 .                  memset(trks.covariance + active_trks, 0, sizeof(float) * KF_NUM_STATES * KF_NUM_STATES);    // Sets all zeros.
+          .                .                 .                  for (j = 0; j < KF_NUM_STATES; j++) trks.covariance[active_trks][j][j] = 10.0f;  // Creates identity matrix.
+          .                .                 .                  trks.covariance[active_trks][4][4] *= 1000.0f;                        // Speeds have
+          .                .                 .                  trks.covariance[active_trks][5][5] *= 1000.0f;                        // higher 
+          .                .                 .                  trks.covariance[active_trks][6][6] *= 1000.0f;                        // variance.
+          .                .                 .                  */
+          0                0                 0                  memset(trks.covariance + active_trks, 0, sizeof(float) * KF_NUM_COV_COMPACT);    // Sets all zeros.
+      1,000 (0.0%)         0                 0                  for (j = 0; j < KF_NUM_STATES; j++) trks.covariance[active_trks][j] = 10.0f;  // Creates identity matrix.
+          0                0                 0                  trks.covariance[active_trks][4] *= 1000.0f;                        // Speeds have
+          .                .                 .                  trks.covariance[active_trks][5] *= 1000.0f;                        // higher 
+          0                0                 0                  trks.covariance[active_trks][6] *= 1000.0f;                        // variance.
+          .                .                 .           
+          .                .                 .          
+          .                .                 .                  // 3. Initialize Track's Meta
+          .                .                 .                  // ----------------------------
+          0                0                 0                  trks.time_since_update[active_trks] = 0;
+        500 (0.0%)         0                 0                  trks.track_id[active_trks] = ID_manager;
+        500 (0.0%)         0                 0                  ID_manager++;
+          .                .                 .          
+        500 (0.0%)         0                 0                  trks.hit_streak[active_trks] = 0;
+          0                0                 0                  trks.age[active_trks] = 0;
+          .                .                 .          
+          .                .                 .                  for (int j = 0; j < MAX_OBSERVATIONS; j++) {
+          .                .                 .                      // trks.observations[active_trks][j][0...3] = -1.0;     // dont care.
+        500 (0.0%)         1  (0.0%)         0                      trks.observations[active_trks][j][OBS_AGE_INDEX] = -10.0f;
+          .                .                 .                  }
+          .                .                 .          
+          .                .                 .                  // NOTE: we only care about the center `x` and `y` to compute
+          .                .                 .                  // the speed, for everything else... there is mastercard hahaha
+          .                .                 .                  // trks.momentum_obs[active_trks][0] = -1.0f;               
+          .                .                 .                  // trks.momentum_obs[active_trks][1] = -1.0f;
+          0                0                 0                  trks.latest_obs[active_trks] = trks.observations[active_trks][0];
+        500 (0.0%)         1  (0.0%)         0                  trks.latest_obs[active_trks][0] = -1.0f;
+          .                .                 .                  trks.latest_obs[active_trks][1] = -1.0f;
+          .                .                 .                  trks.latest_obs[active_trks][2] = -1.0f;
+          .                .                 .                  trks.latest_obs[active_trks][3] = -1.0f;
+          .                .                 .          
+          0                0                 0                  trks.latest_obs_available[active_trks] = 0;
+          .                .                 .                  // NOTE: future trks.class_id[active_trks] = 0;
+        500 (0.0%)         0                 0                  trks.vx[active_trks] = 0.0f; // NOTE/TODO: Do we need to start these
+          0                0                 0                  trks.vy[active_trks] = 0.0f; // Aren't they computed when they are needed?
+          0                0                 0                  trks.kf_observed_flag[active_trks] = 0;
+          .                .                 .          
+        500 (0.0%)         0                 0                  active_trks++;
+          .                .                 .              }
+          .                .                 .          
+        206 (0.0%)         1  (0.0%)         0          }
+          .                .                 .          
+          .                .                 .          void OCSortSoA::trackcpy(unsigned dest_i, unsigned src_i) {
+          .                .                 .              trks.x[dest_i] = trks.x[src_i];
+          .                .                 .              trks.y[dest_i] = trks.y[src_i];
+          .                .                 .              trks.s[dest_i] = trks.s[src_i];
+          .                .                 .              trks.r[dest_i] = trks.r[src_i];
+          .                .                 .              trks.dx[dest_i] = trks.dx[src_i];
+          .                .                 .              trks.dy[dest_i] = trks.dy[src_i];
+-- line 693 ----------------------------------------
+-- line 723 ----------------------------------------
+          .                .                 .          
+          .                .                 .              trks.latest_obs_available[dest_i]   = trks.latest_obs_available[src_i];
+          .                .                 .              trks.vx[dest_i]                     = trks.vx[src_i];
+          .                .                 .              trks.vy[dest_i]                     = trks.vy[src_i];
+          .                .                 .              trks.kf_observed_flag[dest_i]       = trks.kf_observed_flag[src_i];
+          .                .                 .              trks.class_id[dest_i]               = trks.class_id[src_i];
+          .                .                 .          }
+          .                .                 .          
+          0                0                 0          int OCSortSoA::export_and_prune_tracks(void) {
+          0                0                 0              int output_len = 0;
+          .                .                 .              
+        200 (0.0%)         0               200  (0.0%)      for (int i = 0; i < active_trks; i++) {
+          .                .                 .                      
+          .                .                 .                  // Export valid tracks
+    301,500 (0.0%)     6,793  (0.1%)         9  (0.0%)          if ((trks.time_since_update[i] < 1) && ((trks.hit_streak[i] >= cfg.min_hits) || frame_count <= cfg.min_hits)) {
+    100,000 (0.0%)     6,595  (0.1%)         0                      bbox_out[output_len][0] = (float) trks.track_id[i];
+    100,000 (0.0%)     1,797  (0.0%)         8  (0.0%)              if (trks.latest_obs_available[i]) {
+          0                0                 0                          memcpy(&bbox_out[output_len][1], trks.latest_obs[i], 4 * sizeof(float));
+          .                .                 .                      } else {
+      2,000 (0.0%)       117  (0.0%)         0                          bbox_out[output_len][1] = trks.x1[i];
+          .                .                 .                          bbox_out[output_len][2] = trks.y1[i];
+          .                .                 .                          bbox_out[output_len][3] = trks.x2[i];
+          .                .                 .                          bbox_out[output_len][4] = trks.y2[i];
+          .                .                 .                      }
+          0                0                 0                      output_len++;
+          .                .                 .                  }
+          .                .                 .          
+          .                .                 .                  // Prune dead tracks
+    100,000 (0.0%)         0                 0                  if (trks.time_since_update[i] > cfg.max_age) {
+     99,500 (0.0%)         0                 0                      active_trks--;
+          .                .                 .                      trackcpy(i, active_trks);
+          .                .                 .                      i--;
+          .                .                 .                  }
+          .                .                 .              }
+          .                .                 .          
+          .                .                 .              return output_len;
+      1,400 (0.0%)       199  (0.0%)         0          }
+          .                .                 .          
+          .                .                 .          
+          .                .                 .          
+
+--------------------------------------------------------------------------------
+-- Annotated source file: /home/chris/Documents/phd/code/ccode/oc-sort/src/hungarian.c
+--------------------------------------------------------------------------------
+Dr________________ D1mr_____________ Bcm__________ 
+
+-- line 4 ----------------------------------------
+          .                .              .         #include <cstring>
+          .                .              .         #include <cfloat>
+          .                .              .         
+          .                .              .         /* Solver for floating cost */
+          .                .              .         
+          .                .              .         void init_farrays(float *u, float *v, int *p, int *way, int m, int n) {
+          .                .              .             // NOTE: m >= n
+          .                .              .             int i;
+        199 (0.0%)         0              0             for(i = 0; i <= n; i++) {
+          0                0              0                 u[i] = 0.0;
+        199 (0.0%)         0              0                 v[i] = 0.0;
+        199 (0.0%)         0              0                 p[i] = 0;
+        398 (0.0%)         0              0                 way[i] = 0;
+          .                .              .             }
+        796 (0.0%)         0              2 (0.0%)      for(; i <= m; i++) {
+          .                .              .                 v[i] = 0.0;
+          .                .              .                 p[i] = 0;
+          .                .              .                 way[i] = 0;
+          .                .              .             }
+          .                .              .         }
+          .                .              .         
+        199 (0.0%)         0              0         void _flinearsolver(int *p, float *cost, int const n, int const m) {
+        796 (0.0%)       398  (0.0%)     10 (0.0%)      float u[n + 1], v[m + 1], minv[m + 1];
+        199 (0.0%)       199  (0.0%)      2 (0.0%)      int way[m + 1];
+        199 (0.0%)       199  (0.0%)      2 (0.0%)      uint8_t unused[m + 1];
+          .                .              .             int i, j, i0, j0, j1, i0_j;
+          .                .              .             float delta, cur;
+          .                .              .         
+          .                .              .             init_farrays(u, v, p, way, m, n);
+    199,995 (0.0%)         0            199 (0.0%)      for (i = 1; i <= n; i++) {
+          0                0              0                 p[0] = i;
+          0                0              0                 j0 = 0;
+          .                .              .         
+    995,000 (0.0%)         0         99,920 (1.7%)          for(j = 0; j <= m; j++) {
+          0                0              0                     minv[j] = FLT_MAX;
+    298,500 (0.0%)         0              0                     unused[j] = 1;
+          .                .              .                 }
+          .                .              .         
+          .                .              .                 do {
+          0                0              0                     unused[j0] = 0;
+          .                .              .                     i0 = p[j0];
+          0                0              0                     delta = FLT_MAX;
+     99,505 (0.0%)         0         99,541 (1.7%)              for(j = 1; j <= m; j++) {
+ 49,752,500 (2.1%)         0              5 (0.0%)                  if(unused[j]) {
+          0                0              0                             i0_j = m * (i0 - 1) + j - 1;
+149,257,485 (6.2%) 3,115,709 (35.9%)      0                             cur = cost[i0_j] - u[i0] - v[j];
+ 49,752,495 (2.1%)         0            464 (0.0%)                      if (cur < minv[j])
+ 49,751,620 (2.1%)         0              0                                 minv[j] = cur, way[j] = j0;
+          0                0              0                             if (minv[j] < delta)
+          0                0              0                                 delta = minv[j], j1 = j;
+          .                .              .                         }    
+          .                .              .                     }
+          .                .              .         
+          0                0         99,508 (1.7%)              for (j = 0; j <= m; j++) {
+ 49,852,005 (2.1%)         0             20 (0.0%)                  if (unused[j])
+ 49,752,495 (2.1%)         0              0                             minv[j] -= delta;
+          .                .              .                         else
+    298,530 (0.0%)         0              0                             u[p[j]] += delta, v[j] -= delta;
+          .                .              .                     }
+          .                .              .                     j0 = j1;
+    199,005 (0.0%)     5,982  (0.1%)      5 (0.0%)          } while(p[j0]);
+          .                .              .         
+          .                .              .                 do {
+     99,502 (0.0%)         0              0                     j1 = way[j0];
+     99,502 (0.0%)         0              0                     p[j0] = p[j1];
+          .                .              .                     j0 = j1;
+          0                0              3 (0.0%)          } while(j0);
+          .                .              .             }
+          .                .              .         
+          .                .              .             /*
+          .                .              .              * This section requires trans as input, to know if the cost matrix was 
+          .                .              .              * transposed or not.
+          .                .              .         #ifdef PRINT_ASSOCIATION
+          .                .              .             std::cout << "#--- ASSOCIATION ---#" << std::endl;
+          .                .              .             if (trans)
+-- line 78 ----------------------------------------
+-- line 83 ----------------------------------------
+          .                .              .             for(i = 1; i <= m; i++) {
+          .                .              .                 std::cout << i << "  " << p[i] << std::endl;
+          .                .              .             }
+          .                .              .         #endif
+          .                .              .             */
+          .                .              .         
+          .                .              .             // return -v[0]; For association, the cost isn't the interest of when associating
+          .                .              .         
+      1,791 (0.0%)       398  (0.0%)      0         }
+          .                .              .         
+          .                .              .         // Define the absolute maximum objects your tracker will ever handle per frame
+          .                .              .         /* --- FPGA - Vitis ---
+          .                .              .         #define MAX_N 100 
+          .                .              .         #define MAX_M 100
+          .                .              .         
+          .                .              .         float _flinearsolver_transposed(int *out, const float *cost, int n, int m) {
+          .                .              .             // 1. HARDWARE FIX: Statically sized arrays for BRAM synthesis
+-- line 99 ----------------------------------------
+-- line 157 ----------------------------------------
+          .                .              .             // cols rows, meaning out is output[cols] = rows[cols]
+          .                .              .             
+          .                .              .             // for(i = 1; i <= n; i++) {
+          .                .              .             //    out[outT[i]] = i;
+          .                .              .             // }
+          .                .              .         
+          .                .              .         }
+          .                .              .         
+        199 (0.0%)       199  (0.0%)      0         uint8_t flinearsolver(int *out, float *cost, int n, int m) {
+          .                .              .             // *************************************
+          .                .              .             // * NOTE:                             *
+          .                .              .             // * This solver requires that m >= n. *
+          .                .              .             // *************************************
+          0                0              0             if (n > m) {
+          .                .              .                 _flinearsolver_transposed(out, cost, n, m);
+          .                .              .                 return 1;
+          .                .              .             }
+          .                .              .         
+          0                0              0             _flinearsolver(out, cost, n, m);
+          0                0              0             return 0;
+      1,393 (0.0%)       199  (0.0%)      0         }
+          .                .              .         
+
+--------------------------------------------------------------------------------
+-- Annotated source file: /home/chris/Documents/phd/code/ccode/oc-sort/src/kalman.c
+--------------------------------------------------------------------------------
+Dr____________ D1mr_________ Bcm 
+
+      .             .          .  #include "include/kalman.h"
+      .             .          .  
+      0             0          0  CVKalmanFilter::CVKalmanFilter(void) {
+      .             .          .  
+      .             .          .      // Measurment Noise
+      1 (0.0%)      1 (0.0%)   0      R[0] = R[1] = 1.0; 
+      0             0          0      R[2] = R[3] = 10.0;
+      .             .          .      
+      .             .          .      // Process Noise
+      2 (0.0%)      1 (0.0%)   0      Q[0] = Q[1] = 1.0;  
+      .             .          .      Q[2] = Q[3] = 1.0;
+      .             .          .      Q[4] = Q[5] = 0.01;
+      .             .          .      Q[6] = 0.01*0.01;
+      .             .          .  
+      1 (0.0%)      0          0  }
+      .             .          .  /* Legacy
+      .             .          .  void CVKalmanFilter::compute_K_fast(float *K, float P[][KF_NUM_STATES], float *R) {
+      .             .          .      K[0] = P[0][0] / (P[0][0] + R[0]);
+      .             .          .      K[1] = P[1][1] / (P[1][1] + R[1]);
+      .             .          .      K[2] = P[2][2] / (P[2][2] + R[2]);
+      .             .          .      K[3] = P[3][3] / (P[3][3] + R[3]);
+      .             .          .  
+      .             .          .      K[4] = P[4][0] / (P[0][0] + R[0]);
+-- line 23 ----------------------------------------
+-- line 42 ----------------------------------------
+      .             .          .  // |  0  0 P2  0  0   0  p9* |
+      .             .          .  // |  0  0  0 P3  0   0   0  |
+      .             .          .  // | P7  0  0  0 P4   0   0  |
+      .             .          .  // |  0 P8  0  0  0  P5   0  |
+      .             .          .  // |  0  0 P9  0  0   0  P6  |
+      .             .          .  // +-                       -+
+      .             .          .  // NOTE: p7* = P7, p8* = P8, p9* = P9
+      .             .          .   
+      0             0          0  void CVKalmanFilter::compute_K_fast(float *K, float *P, float *R) {
+199,000 (0.0%) 12,747 (0.1%)   0      K[0] = P[0] / (P[0] + R[0]);
+199,000 (0.0%)      0          0      K[1] = P[1] / (P[1] + R[1]);
+199,000 (0.0%) 12,537 (0.1%)   0      K[2] = P[2] / (P[2] + R[2]);
+199,000 (0.0%)      0          0      K[3] = P[3] / (P[3] + R[3]);
+      .             .          .  
+298,500 (0.0%) 24,676 (0.3%)   0      K[4] = P[7] / (P[0] + R[0]);
+298,500 (0.0%) 12,537 (0.1%)   0      K[5] = P[8] / (P[1] + R[1]);
+298,500 (0.0%)      0          0      K[6] = P[9] / (P[2] + R[2]);
+ 99,500 (0.0%)      0          0  }
+      .             .          .  
+      0             0          0  void CVKalmanFilter::predict_Pi(float *P, int i) {
+      .             .          .      int j = i + 4;
+      .             .          .      int ij = i + 7;
+      .             .          .  
+895,500 (0.0%) 62,287 (0.7%)   0      P[i] += P[j] + 2.0f * P[ij];
+597,000 (0.0%)      0          0      P[ij] += P[j];
+298,500 (0.0%)      0          0  }
+      .             .          .  
+      .             .          .  void CVKalmanFilter::update_Pij_with_k(float *P, float Rii, float *K, unsigned i) {
+      .             .          .      unsigned j = i + 4;
+      .             .          .      unsigned ij = i + 7;
+298,500 (0.0%)      0          0      float Pii = P[i];
+298,500 (0.0%)      0          0      float Pij = P[ij];
+298,500 (0.0%)      0          0      float Kii = K[i];
+298,500 (0.0%)      0          0      float Kji = K[j];
+      .             .          .  
+ 99,500 (0.0%)    199 (0.0%)   0      float _1_Kii = 1 - Kii;
+      0             0          0      float KiKjiRii = Kii * Kji * Rii;
+      0             0          0      float Pji_KjiPii = Pij - Kji * Pii;
+      .             .          .  
+      0             0          0      P[i] = Pii * _1_Kii*_1_Kii + Kii*Kii * Rii;
+      0             0          0      P[ij] = Pji_KjiPii * _1_Kii + KiKjiRii;
+398,000 (0.0%)      0          0      P[j] = Kji * (-Pij - Pji_KjiPii) + P[j] + Kji*Kji * Rii; 
+      .             .          .  }
+      .             .          .  
+      .             .          .  void CVKalmanFilter::update_P33_with_k(float *P, float R33, float K33) {
+199,000 (0.0%)      0          0      P[3] = P[3] * (1 - K33) * (1 - K33) + K33 * K33 * R33;
+      .             .          .  }
+      .             .          .  
+      0             0          0  void CVKalmanFilter::update_P_with_K(float *P, float *K, float *R) {
+ 99,500 (0.0%)      0          0      update_Pij_with_k(P, R[0], K, 0);
+ 99,500 (0.0%)      0          0      update_Pij_with_k(P, R[1], K, 1);
+ 99,500 (0.0%)      0          0      update_Pij_with_k(P, R[2], K, 2);
+ 99,500 (0.0%)      0          0      update_P33_with_k(P, R[3], K[3]);                              // NOTE: invoking a function is faster than unfolding
+      .             .          .                                                                      // the array here.
+ 99,500 (0.0%)      0          0  }
+      .             .          .  
+      .             .          .  
+
+--------------------------------------------------------------------------------
+-- Annotation summary
+--------------------------------------------------------------------------------
+Dr___________________ D1mr_____________ Bcm______________ 
+
+2,011,941,105 (83.2%) 8,399,109 (96.8%) 2,009,241 (34.8%)    annotated: files known & above threshold & readable, line numbers known
+            0                 0                 0            annotated: files known & above threshold & readable, line numbers unknown
+            0                 0                 0          unannotated: files known & above threshold & two or more non-identical
+  291,659,510 (12.1%)   185,637  (2.1%) 3,547,999 (61.4%)  unannotated: files known & above threshold & unreadable 
+   11,406,977  (0.5%)    93,022  (1.1%)   220,849  (3.8%)  unannotated: files known & below threshold
+  103,119,207  (4.3%)     1,676  (0.0%)       415  (0.0%)  unannotated: files unknown
+
