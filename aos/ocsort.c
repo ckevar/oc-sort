@@ -141,26 +141,9 @@ compute_momentum_cost(
     // Momentum Similarity
     *angle_diff = t->vx * delta_x + t->vy* delta_y;
 
-    // TRUE angle_diff {
     *angle_diff = fminf(1.0f, fmaxf(-1.0f, *angle_diff)); //
     *angle_diff = acosf(*angle_diff);
     *angle_diff = 0.5f  - (*angle_diff / M_PI_F); // = asinf(*angle_diff) / M_PI_F;
-    // }
-    
-
-    // angle_diff approximations
-    // *angle_diff = fminf(1.0f, fmaxf(-1.0f, *angle_diff));
-    // float x2 = (*angle_diff) * (*angle_diff);
-
-    // 1. Taylor Expansion
-       // *angle_diff = (*angle_diff) * (0.318310f + x2 * (0.053051f + x2 * 0.0477464f));
-
-    // 2. Taylor expansion tails capped
-       // *angle_diff = (*angle_diff) * (0.318310f + x2 * (0.053051f + x2 * 0.0477464f)) / 0.838216f;
-
-    // 3. Taylor expansion: average fitting:
-    //   *angle_diff = (*angle_diff) * (0.318310f + x2 * (0.053052f + x2 * 0.128638f));
-
 }
 
 void OCSortAoS::compute_first_cost(void) {

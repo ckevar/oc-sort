@@ -168,10 +168,7 @@ compute_momentum_cost(
     // Momentum Similarity
     *angle_diff = t->vx[i] * delta_x + t->vy[i] * delta_y;
 
-    // Clamp to [-1.0f, 1.0f], potential NaN
-    // Upon taylor expansion this might not be relevant
     *angle_diff = fminf(1.0f, fmaxf(-1.0f, *angle_diff));
-
     *angle_diff = acosf(*angle_diff);
     *angle_diff = 0.5f  - (*angle_diff / M_PI_F);
 }
