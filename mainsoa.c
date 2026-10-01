@@ -23,7 +23,9 @@
  * - 0019, on frames 351, the matching lines are 668 to 658
  */
 
+#ifndef WARMUP_FRAMES
 #define WARMUP_FRAMES   80  // Empirical Value
+#endif
 
 long int
 count_detections_in_frame(
@@ -60,6 +62,7 @@ void MOTManager::run(OCSortSoA& ocsort, struct Detection *dets, long int dets_le
     struct timespec tstart, tend;
     long ttotal = 0;
     long elapsedTimePerFrame = 0;
+
     
     for(frame_id = 0; 1; frame_id++) {
         frame_dets_len = count_detections_in_frame(dets, frame_id, dets_offset, dets_len);
@@ -69,7 +72,7 @@ void MOTManager::run(OCSortSoA& ocsort, struct Detection *dets, long int dets_le
         }
 
         frame_dets = dets + dets_offset; 
-    
+        
         clock_gettime(CLOCK_MONOTONIC, &tstart);
         trk_count = ocsort.update(frame_dets, frame_dets_len);
         clock_gettime(CLOCK_MONOTONIC, &tend);
@@ -94,6 +97,7 @@ void MOTManager::run(OCSortSoA& ocsort, struct Detection *dets, long int dets_le
 }
 
 int main(int argc, char *argv[]) {
+
     long int dets_len;
     struct Detection *dets = NULL;
     OCSORTcfg ocsort_cfg;

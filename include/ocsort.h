@@ -53,5 +53,6 @@ class OCSort {
 
 void MK_OCSORT_DEFAULT_CONFIG(OCSORTcfg *cfg);
 int prune_low_conf_dets(float th, struct Detection *dets, int dets_len);
+float area_of_intersection(float *xyxy1, float *xyxy2);
 
 #endif

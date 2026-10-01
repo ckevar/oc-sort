@@ -63,4 +63,16 @@ int prune_low_conf_dets(float th, struct Detection *dets, int dets_len) {
     return dets_len;
 }
 
+float area_of_intersection(float *xyxy1, float *xyxy2) {
+    float xmin, ymin, xmax, ymax;
+    xmin = xyxy1[0] > xyxy2[0] ? xyxy1[0] : xyxy2[0];
+    ymin = xyxy1[1] > xyxy2[1] ? xyxy1[1] : xyxy2[1];
+    xmax = xyxy1[2] < xyxy2[2] ? xyxy1[2] : xyxy2[2];
+    ymax = xyxy1[3] < xyxy2[3] ? xyxy1[3] : xyxy2[3]; 
+    
+    xmax -= xmin;
+    ymax -= ymin;
 
+    if ((xmax <= 0.0f) || (ymax <= 0.0f)) return 0.0f;
+    return xmax * ymax;
+}

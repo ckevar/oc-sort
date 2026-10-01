@@ -20,7 +20,7 @@ void MOTManager::close_trks(void) {
 
 void MOTManager::save_trks(int frame_id, float *bbox, int len) {
     if (0 == len) {
-        fprintf(stderr, "Warning: frame %d is empty.\n", frame_id);
+        // fprintf(stderr, "Warning: frame %d is empty.\n", frame_id);
         return;
     } 
 

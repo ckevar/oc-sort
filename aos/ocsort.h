@@ -28,27 +28,27 @@ class OCSortAoS: public OCSort {
         /* Track */
         static struct Track trks[MAX_TRACKS];
         struct Track TRK_TEMPLATE;
-        void predict_trks(void);
-        void update_trk(int trk_idx, int det_idx);  // wrapper
-        void freeze_state(struct Track *t);
-        void unfreeze_state(struct Track *t, struct DetectionAoS *d);
-        void update_trk_state(struct Track *t, struct DetectionAoS *d);
-        void update_trk_observations(struct Track *t, float *det_raw);
+        void predict_tracks(void);
+        void update_track(int trk_idx, int det_idx);  // wrapper
+        void freeze_track_state(struct Track *t);
+        void unfreeze_track_state(struct Track *t, struct DetectionAoS *d);
+        void update_track_state(struct Track *t, struct DetectionAoS *d);
+        void update_track_observations(struct Track *t, float *det_raw);
         CVKalmanFilterAoS kf;
 
         // First Association
-        void compute_first_cost(void);
-        void first_association(void);
+        void cost_stage1(void);
+        void association_stage1(void);
 
         /* Second Association */
-        int compute_second_cost(void);
-        void second_association(void);
+        int cost_stage2(void);
+        void association_stage2(void);
 
         /* Track Management */
         void update_unmatched_tracks(void);
-        void create_new_tracks(void);
+        void init_tracks(void);
         int export_and_prune_tracks(void);
-        void trackcpy(unsigned dest_i, unsigned src_i);
+        void reallocate_track(unsigned dest_i, unsigned src_i);
 };
 
 #endif

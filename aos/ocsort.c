@@ -23,21 +23,20 @@ int OCSortAoS::update(struct Detection *raw_dets, uint16_t raw_dets_len) {
 
     dets_xyxy2xysr(dets, raw_dets, dets_len);
 
-    predict_trks();
+    predict_tracks();
 
-    compute_first_cost();
-
-    first_association();
+    cost_stage1();
+    association_stage1();
 
     if ((unmatched_trks_count > 0) && (unmatched_dets_count > 0)) {
-        if (compute_second_cost()) {
-            second_association();
+        if (cost_stage2()) {
+            association_stage2();
         }
     }
     
     update_unmatched_tracks();
 
-    create_new_tracks();
+    init_tracks();
 
     // printf("  Active Tracks: %d\n  unmatched detections: %d\n  Unmatched Tracks %d\n  det len %d\n", active_trks, unmatched_dets_count, unmatched_trks_count, dets_len);
     return export_and_prune_tracks();
@@ -51,23 +50,28 @@ int OCSortAoS::update(struct Detection *raw_dets, uint16_t raw_dets_len) {
 inline void get_k_previous_observation(struct Track *t, uint16_t k) {
     int16_t dt, cur_age, target_age, observation_age;
     cur_age = t->age;
+    float *slot;
 
     for (dt = k; dt > 0; dt--) {
+
         target_age = cur_age - dt;
-        t->momentum_obs = t->observations[target_age % k]; // int idx = (target_age %k + k) % k;
-        observation_age = (int16_t) t->momentum_obs[OBS_AGE_INDEX];
+        slot = t->observations[target_age % k]; // int idx = (target_age %k + k) % k;
+        observation_age = (int16_t) slot[OBS_AGE_INDEX];
+
         if (observation_age == target_age) {
+            t->centerxy[0] = (slot[2] + slot[0]) / 2.0f;
+            t->centerxy[1] = (slot[3] + slot[1]) / 2.0f;
             return;
         }
     }
 
-    t->momentum_obs = t->latest_obs;
+    t->centerxy[0] = (t->latest_obs[2] + t->latest_obs[0]) / 2.0f;
+    t->centerxy[1] = (t->latest_obs[3] + t->latest_obs[1]) / 2.0f;
 }
 
-void OCSortAoS::predict_trks(void) {
+void OCSortAoS::predict_tracks(void) {
     
     for (int i = 0; i < active_trks; i++) {
-        // TODO: optimize this "if" condition
         if (trks[i].s + trks[i].ds <= 0.0f) {
             trks[i].ds = 0.0f;
         }
@@ -95,32 +99,13 @@ void OCSortAoS::predict_trks(void) {
 // BEGIN | Compute First Cost
 // ------+
 
-// float compute_inter_area(struct Detection *d, float *xyxy2) {
-float compute_inter_area(float *xyxy1, float *xyxy2) {
-    float xmin, ymin, xmax, ymax;
-    xmin = xyxy1[0] > xyxy2[0] ? xyxy1[0] : xyxy2[0];
-    ymin = xyxy1[1] > xyxy2[1] ? xyxy1[1] : xyxy2[1];
-    xmax = xyxy1[2] < xyxy2[2] ? xyxy1[2] : xyxy2[2];
-    ymax = xyxy1[3] < xyxy2[3] ? xyxy1[3] : xyxy2[3]; 
-    
-    xmax -= xmin;
-    ymax -= ymin;
 
-    if ((xmax <= 0.0f) || (ymax <= 0.0f)) return 0.0f;
-    return xmax * ymax;
+
+inline float iou_with_areas(float *xyxy1, float area1, float *xyxy2, float area2) {
+    float inter_area =  area_of_intersection(xyxy1, xyxy2);
+    return inter_area / (area1 + area2 - inter_area);
 }
 
-inline void compute_iou(float *iou, struct DetectionAoS *d, struct Track *t) {
-    float inter_area = compute_inter_area(d->raw->xyxybox, t->xyxybox);
-    *iou = inter_area / (d->area + t->s - inter_area);
-}
-
-inline float compute_iou_lastest_obs(struct DetectionAoS *d, float *latest_obs) {
-    float inter_area =  compute_inter_area(d->raw->xyxybox, latest_obs);
-    float t_latest_area = (latest_obs[2] - latest_obs[0]) * (latest_obs[3] - latest_obs[1]);
-    float iou = inter_area / (d->area + t_latest_area - inter_area);
-    return iou;
-}
 
 inline void 
 compute_momentum_cost(
@@ -131,66 +116,48 @@ compute_momentum_cost(
     // This functions ranges from -0.5 to 0.5
 
     // Intention of motion
-    float delta_x = d->x - (t->momentum_obs[2] + t->momentum_obs[0]) / 2.0f;
-    float delta_y = d->y - (t->momentum_obs[3] + t->momentum_obs[1]) / 2.0f;
+    
+    float delta_x = d->x - t->centerxy[0];
+    float delta_y = d->y - t->centerxy[1];
     float norm = sqrtf(delta_x * delta_x + delta_y * delta_y) + 1e-6f;
-
-    delta_x /= norm;
-    delta_y /= norm;
 
     // Momentum Similarity
     *angle_diff = t->vx * delta_x + t->vy* delta_y;
+    *angle_diff = *angle_diff / norm;
 
-    // TRUE angle_diff {
-    //*angle_diff = fminf(1.0f, fmaxf(-1.0f, *angle_diff)); //
-    //*angle_diff = acosf(*angle_diff);
-    //*angle_diff = 0.5f  - (*angle_diff / M_PI_F); // = asinf(*angle_diff) / M_PI_F;
-    // }
-    
-
-    // angle_diff approximations
-    // Upon taylor expansion this might not be relevant
-    *angle_diff = fminf(1.0f, fmaxf(-1.0f, *angle_diff));
-    float x2 = (*angle_diff) * (*angle_diff);
-
-    // 1. Taylor Expansion
-       // *angle_diff = (*angle_diff) * (0.318310f + x2 * (0.053051f + x2 * 0.0477464f));
-
-    // 2. Taylor expansion tails capped
-       // *angle_diff = (*angle_diff) * (0.318310f + x2 * (0.053051f + x2 * 0.0477464f)) / 0.838216f;
-
-    // 3. Taylor expansion: tail adjustment
-       *angle_diff = (*angle_diff) * (0.318310f + x2 * (0.053052f + x2 * 0.128638f));
-
+    *angle_diff = fminf(1.0f, fmaxf(-1.0f, *angle_diff)); //
+    *angle_diff = acosf(*angle_diff);
+    *angle_diff = 0.5f  - (*angle_diff / M_PI_F); // = asinf(*angle_diff) / M_PI_F;
 }
 
-void OCSortAoS::compute_first_cost(void) {
-    size_t j, index;
-    int i;
+void OCSortAoS::cost_stage1(void) {
+    size_t dj, row_index;
+    int ti;
     float iou, angle_diff;
+    float *row_iou, *row_cost;
 
     if (0 == active_trks) {
         return;
     }
 
-    for(i = 0; i < active_trks; i++) {
-        for (j = 0; j < dets_len; j++) {
-            //--- IoU
-            compute_iou(&iou, &dets[j], &trks[i]);
-            iou = (iou < cfg.iou_lower_bound) ? 0.0f : iou;
-            index = (i * dets_len) + j;
-            iou_matrix[index] = iou;
+    for(ti = 0; ti < active_trks; ti++) {
 
-            // if (iou < cfg.iou_threshold) {
-            //    cost_matrix[index] = -iou + 1.2f;
-            // } else {
-            //--- Momentum Cost
-            compute_momentum_cost(&angle_diff, &dets[j], &trks[i]);
-            angle_diff = angle_diff * cfg.inertia * dets[j].raw->score;
+        row_index = ti * dets_len;
+        row_iou = &iou_matrix[row_index];
+        row_cost = &cost_matrix[row_index];
+
+        for (dj = 0; dj < dets_len; dj++) {
+            //--- IoU
+            iou = iou_with_areas(dets[dj].raw->xyxybox, dets[dj].area, 
+                    trks[ti].xyxybox, trks[ti].s);
+            iou = (iou < cfg.iou_lower_bound) ? 0.0f : iou;
+
+            compute_momentum_cost(&angle_diff, &dets[dj], &trks[ti]);
+            angle_diff = angle_diff * cfg.inertia * dets[dj].raw->score;
 
             //-- Fill the matrices
-            cost_matrix[index] = -(iou + angle_diff) + 1.2f;
-            iou_matrix[index] = iou;
+            row_cost[dj] = -(iou + angle_diff) + 1.2f;
+            row_iou[dj] = iou;
             // }
         }
     }
@@ -206,7 +173,7 @@ void OCSortAoS::compute_first_cost(void) {
 // ------+
 
 
-void OCSortAoS::update_trk_state(struct Track *t, struct DetectionAoS *d) {
+void OCSortAoS::update_track_state(struct Track *t, struct DetectionAoS *d) {
     float dz[4];        // Innovation array
 
     // Compute Innovation
@@ -223,12 +190,9 @@ void OCSortAoS::update_trk_state(struct Track *t, struct DetectionAoS *d) {
 
 }
 
-void speed_direction(struct Track *t, float *det_xysrbox, float *prev_box) {
-    float c1x = (prev_box[0] + prev_box[2]) / 2.0;
-    float c1y = (prev_box[1] + prev_box[3]) / 2.0;
-
-    float dx = det_xysrbox[0] - c1x;
-    float dy = det_xysrbox[1] - c1y;
+void compute_trk_velocities(struct Track *t, float *det_xysrbox) {
+    float dx = det_xysrbox[0] - t->centerxy[0];
+    float dy = det_xysrbox[1] - t->centerxy[1];
 
     float norm = sqrtf(dx * dx + dy * dy);
     t->vx = dx / norm;
@@ -236,34 +200,12 @@ void speed_direction(struct Track *t, float *det_xysrbox, float *prev_box) {
 
 }
 
-void compute_trk_velocities(struct Track *t, float *det_xysrbox, int k) {
-    
-    float *previous_box, *slot;
-    int dt, target_age, cur_age, obs_age;
-
-    previous_box = t->latest_obs;
-    cur_age = t->age;
-
-    // Search if there's any previous bbox
-    for (dt = k; dt > 0; dt--) {
-        target_age = cur_age - dt;
-        slot = t->observations[target_age % k];
-        obs_age = (int) slot[OBS_AGE_INDEX];
-
-        if(obs_age == target_age) {
-            previous_box = slot;
-            break;
-        }
-    }
-
-    speed_direction(t, det_xysrbox, previous_box);
-}
-
-void OCSortAoS::update_trk_observations(struct Track *t, float *det_raw) {
+void OCSortAoS::update_track_observations(struct Track *t, float *det_raw) {
     int age_index;
 
     // NOTE: Observation is age-based.
     age_index = t->age % cfg.delta_t;
+
     memcpy(t->observations[age_index], 
             det_raw,
             sizeof(float) * OBS_NET_LENGTH);
@@ -272,7 +214,7 @@ void OCSortAoS::update_trk_observations(struct Track *t, float *det_raw) {
     t->latest_obs = (float *) &t->observations[age_index]; 
 }
 
-void OCSortAoS::freeze_state(struct Track *t) {
+void OCSortAoS::freeze_track_state(struct Track *t) {
     memcpy(t->frozen_state, t->xysrbox, sizeof(t->frozen_state));   // Only 4 states are frozen
     t->frozen_ds = t->ds;
 
@@ -285,7 +227,7 @@ void OCSortAoS::freeze_state(struct Track *t) {
            KF_NUM_COV_COMPACT * sizeof(float));
 }
 
-void OCSortAoS::unfreeze_state(struct Track *t, struct DetectionAoS *d) {
+void OCSortAoS::unfreeze_track_state(struct Track *t, struct DetectionAoS *d) {
     // 1. copy back the frozen values
     memcpy(t->xysrbox, t->frozen_state, sizeof(t->frozen_state));
     t->ds = t->frozen_ds;
@@ -346,13 +288,13 @@ void OCSortAoS::unfreeze_state(struct Track *t, struct DetectionAoS *d) {
 }
 
 
-void OCSortAoS::update_trk(int trk_idx, int det_idx) {
+void OCSortAoS::update_track(int trk_idx, int det_idx) {
     struct Track *t = &trks[trk_idx];
     struct DetectionAoS *d;
 
     if (det_idx < 0) {
         if ((1 == t->time_since_update) && (t->age > 1)) {
-            freeze_state(t);
+            freeze_track_state(t);
             t->kf_observed_flag = 1;
         }
         return;
@@ -361,13 +303,14 @@ void OCSortAoS::update_trk(int trk_idx, int det_idx) {
     
     // Check Previous Observation
     if(t->latest_obs_available) {
-        compute_trk_velocities(t, d->xysrbox, cfg.delta_t);
+        compute_trk_velocities(t, d->xysrbox);
     }
+
     t->latest_obs_available = 1;
 
     // Check if there is something frozen
     if (t->kf_observed_flag) {
-        unfreeze_state(t, d);
+        unfreeze_track_state(t, d);
         t->kf_observed_flag = 0;
     }
 
@@ -378,14 +321,14 @@ void OCSortAoS::update_trk(int trk_idx, int det_idx) {
     // 3. hits counter: updated but never used.
     // --- END ---
     
-    update_trk_state(t, d);
-    update_trk_observations(t, d->raw->xyxybox);
+    update_track_state(t, d);
+    update_track_observations(t, d->raw->xyxybox);
 
     t->time_since_update = 0;
     t->hit_streak++;
 }
 
-void OCSortAoS::first_association(void) {
+void OCSortAoS::association_stage1(void) {
     int i, len;
     int row, trk_idx, det_idx, matrix_idx;
     char isTransposed;
@@ -426,7 +369,7 @@ void OCSortAoS::first_association(void) {
             } else {
                 // NOTE/TODO: we might want first extract and then perform the update
                 // because loading cache lines can degrade the performance.
-                update_trk(trk_idx, det_idx);
+                update_track(trk_idx, det_idx);
             }
         }
     }
@@ -443,28 +386,34 @@ void OCSortAoS::first_association(void) {
 
 
 
-int OCSortAoS::compute_second_cost(void) {
-    size_t i, j, index;
-    float iou, iou_max;
+int OCSortAoS::cost_stage2(void) {
+    size_t ti, dj;
+    float iou, iou_max, t_area;
+    float *row_cost;
+    float *t_xyxy;
+    struct DetectionAoS *d;
 
     /* TODO:
     fprintf(stderr, "[WARNING@SECOND COST]: Even though a computer can solve floating points; however, when deployed on FPGAs, these values have to be integers\n");
     */
     iou_max = 0.0f;
 
-    for (i = 0; i < unmatched_trks_count; i++) {
-        for (j = 0; j < unmatched_dets_count; j++) {
-            iou = compute_iou_lastest_obs(&dets[unmatched_dets[j]], trks[unmatched_trks[i]].latest_obs);
-            index = (i * unmatched_dets_count) + j;
-            cost_matrix[index] = -iou + 1.0f; // Biasing this is important to solve hungarian
-            iou_max = fmaxf(iou_max, iou);
+    for (ti = 0; ti < unmatched_trks_count; ti++) {
+
+        t_xyxy = trks[unmatched_trks[ti]].latest_obs;
+        t_area = (t_xyxy[2] - t_xyxy[0]) * (t_xyxy[3] - t_xyxy[1]);
+        row_cost = &cost_matrix[ti * unmatched_dets_count];
+
+        for (dj = 0; dj < unmatched_dets_count; dj++) {
+            d = &dets[unmatched_dets[dj]];
+
+            iou = iou_with_areas(d->raw->xyxybox, d->area, t_xyxy, t_area);
+            row_cost[dj] = -iou + 1.0f; // Biasing this is important to solve hungarian
+            if (iou > iou_max) iou_max = iou;
         }
     }
 
-    if (iou_max > cfg.iou_threshold) 
-        return 1;
-    return 0;
-
+    return (iou_max > cfg.iou_threshold);
 }
 
 // ----+
@@ -476,7 +425,7 @@ int OCSortAoS::compute_second_cost(void) {
 // BEGIN | Second Association
 // ------+
 
-void OCSortAoS::second_association(void) {
+void OCSortAoS::association_stage2(void) {
     unsigned i, len;
     int row, trk_idx, det_idx, matrix_idx;
     char isTransposed;
@@ -502,7 +451,7 @@ void OCSortAoS::second_association(void) {
             matrix_idx = trk_idx * unmatched_dets_count + det_idx;
             iou = 1.0f - cost_matrix[matrix_idx];
             if(iou >= cfg.iou_threshold) {
-                update_trk(unmatched_trks[trk_idx], unmatched_dets[det_idx]);
+                update_track(unmatched_trks[trk_idx], unmatched_dets[det_idx]);
                 unmatched_trks[trk_idx] = -1;
                 unmatched_dets[det_idx] = -1;
             }
@@ -536,7 +485,7 @@ void OCSortAoS::second_association(void) {
 
 void OCSortAoS::update_unmatched_tracks(void) {
     for(unsigned i = 0; i < unmatched_trks_count; i++) {
-        update_trk(unmatched_trks[i], -1);
+        update_track(unmatched_trks[i], -1);
     }
 }
 
@@ -584,10 +533,8 @@ void OCSortAoS::load_track_template(void) {
         TRK_TEMPLATE.observations[j][OBS_AGE_INDEX] = -10.0f;
     }
 
-    // NOTE: we only care about the center `x` and `y` to compute
-    // the speed, for everything else... there is mastercard hahaha
-    // TRK_TEMPLATE.momentum_obs[0] = -1.0f;               
-    // TRK_TEMPLATE.momentum_obs[1] = -1.0f;
+    // TRK_TEMPLATE.centerxy[0] = -1.0f;               
+    // TRK_TEMPLATE.centerxy[1] = -1.0f;
     TRK_TEMPLATE.latest_obs = TRK_TEMPLATE.observations[0];
     TRK_TEMPLATE.latest_obs[0] = -1.0f;
     TRK_TEMPLATE.latest_obs[1] = -1.0f;
@@ -600,7 +547,7 @@ void OCSortAoS::load_track_template(void) {
     TRK_TEMPLATE.kf_observed_flag = 0;
 }
 
-void OCSortAoS::create_new_tracks(void) {
+void OCSortAoS::init_tracks(void) {
     unsigned i, det_idx;
     
     for(i = 0; i < unmatched_dets_count; i++) {
@@ -626,7 +573,7 @@ void OCSortAoS::create_new_tracks(void) {
     }
 }
 
-void OCSortAoS::trackcpy(unsigned dest_i, unsigned src_i) {
+void OCSortAoS::reallocate_track(unsigned dest_i, unsigned src_i) {
     trks[dest_i] = trks[src_i];
     int offset = trks[src_i].latest_obs - (float *)trks[src_i].observations;
     trks[dest_i].latest_obs = (float *)trks[dest_i].observations + offset;
@@ -654,7 +601,7 @@ int OCSortAoS::export_and_prune_tracks(void) {
         // Prune dead tracks
         if(t->time_since_update > cfg.max_age) {
             active_trks--;
-            trackcpy(i, active_trks);
+            reallocate_track(i, active_trks);
             i--;
         }
     }

@@ -1,13 +1,15 @@
 
 .PHONY: clean all
 
+WARMUP_FRAMES_USR ?= 10 
+
 all: soa.bin aos.bin
 
 soa.bin: mainsoa.c soa/*.c src/*.c
-	c++ -O3 -g -Wall -g -o $@ $^ -I. -lm
+	c++ -O3 -g -Wall -g -o $@ $^ -I. -lm -DWARMUP_FRAMES=$(WARMUP_FRAMES_USR)
 
 aos.bin: mainaos.c aos/*.c src/*.c
-	c++ -O3 -g -Wall -g -o $@ $^ -I. -lm
+	c++ -O3 -g -Wall -g -o $@ $^ -I. -lm -DWARMUP_FRAMES=$(WARMUP_FRAMES_USR)
 
 # --- Hungarian's --- {
 correctness_fhungarian: src/hungarian.c include/hungarian.h test/correctness_fhungarian.c

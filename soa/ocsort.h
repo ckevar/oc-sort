@@ -22,28 +22,29 @@ class OCSortSoA: public OCSort {
 
         /* Track */
         static struct Tracks trks;
-        void update_trk(int trk_idx, int det_idx);
-        void update_trk_state(int trk_idx, int det_idx);
-        void update_trk_observations(int trk_idx, int det_idx);
-        void predict_trks(void);
-        void freeze_state(int i);
-        void unfreeze_state(int i, int j);
+        void predict_trakcs(void);
+        void update_track(int trk_idx, int det_idx);
+        void update_track_state(int trk_idx, int det_idx);
+        void update_track_observations(int trk_idx, int det_idx);
+        void predict_tracks(void);
+        void freeze_track_state(int trk_idx);
+        void unfreeze_track_state(int trk_idx, int det_idx);
         CVKalmanFilterSoA kf;
 
 
         /* First Association */
-        void compute_first_cost(void);
-        void first_association(void);
+        void cost_stage1(void);
+        void association_stage1(void);
 
         /* Second Association */
-        int compute_second_cost(void);
-        void second_association(void);
+        int cost_stage2(void);
+        void association_stage2(void);
 
         /* Track Management */
         void update_unmatched_tracks(void);
-        void create_new_tracks(void);
+        void init_tracks(void);
         int export_and_prune_tracks(void);
-        void trackcpy(unsigned dest_i, unsigned src_i);
+        void reallocate_track(unsigned dest_i, unsigned src_i);
 
 };
 

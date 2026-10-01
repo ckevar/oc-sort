@@ -22,11 +22,11 @@ void init_farrays(float *u, float *v, int *p, int *way, int m, int n) {
     }
 }
 
-void _flinearsolver(int *p, float *cost, int const n, int const m) {
+void _flinearsolver(int *p, float * __restrict__ cost, int const n, int const m) {
     float u[n + 1], v[m + 1], minv[m + 1];
     int way[m + 1];
     uint8_t unused[m + 1];
-    int i, j, i0, j0, j1, i0_j;
+    int i, j, i0, j0, j1;
     float delta, cur;
 
     init_farrays(u, v, p, way, m, n);
@@ -43,10 +43,13 @@ void _flinearsolver(int *p, float *cost, int const n, int const m) {
             unused[j0] = 0;
             i0 = p[j0];
             delta = FLT_MAX;
+
+            float u_i0 = u[i0];
+            float * __restrict__ row_cost = &cost[(i0 - 1) * m - 1];
+
             for(j = 1; j <= m; j++) {
                 if(unused[j]) {
-                    i0_j = m * (i0 - 1) + j - 1;
-                    cur = cost[i0_j] - u[i0] - v[j];
+                    cur = row_cost[j] - u_i0 - v[j];
                     if (cur < minv[j])
                         minv[j] = cur, way[j] = j0;
                     if (minv[j] < delta)

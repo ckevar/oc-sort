@@ -60,7 +60,8 @@ struct Tracks {
     // History away from tracks state
     float observations[MAX_TRACKS][MAX_OBSERVATIONS][OBS_LENGTH];   // bounding box [xyxy] | age
     float *latest_obs[MAX_TRACKS];                                  // Points to the last observation on `observations`
-    float *momentum_obs[MAX_TRACKS];                                // Points to the `latest_obs` or the the 3rd previous obervations in `observations`
+    // float *momentum_obs[MAX_TRACKS];                                // Points to the `latest_obs` or the the 3rd previous obervations in `observations`
+    float centerxy[MAX_TRACKS][2];                                  // Holds the center of the boundingon either from `last_obs` or the latest of `observations`
     uint8_t latest_obs_available[MAX_TRACKS];                   // Remember that this has to be initialized as zero upon creation of a track is new. In FPGA this can be represented by a large number instead of an array of uint8_t
     uint16_t class_id[MAX_TRACKS];
 

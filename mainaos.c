@@ -10,7 +10,9 @@
 #include "soa/ocsort.h"
 #include "aos/ocsort.h"
 
-#define WARMUP_FRAMES   80  // Empirically found
+#ifndef WARMUP_FRAMES
+#define WARMUP_FRAMES   80  // Empirical Value
+#endif
 
 long int
 count_detections_in_frame(
