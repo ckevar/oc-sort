@@ -5,26 +5,16 @@
 # 3. run on detected KITTI agents, stored in /tmp/KITTI-det/00*.bin, CPU number 2
 #
 
-EXP_NAME="01-baseline"
-COMMENT="baseline"
+#EXP_NAME="01-baseline"
+#COMMENT="baseline"
 
-#EXP_NAME="03-faster-hungarian"
-#COMMENT="# function _flinearsolver\nCost Matrix row is referenced before running the most inner loop"
-
-#EXP_NAME="04-Avoid-Reseeking-previous-box"
-#COMMENT="# function compute_trk_velocities\nIt re-seeks the previous box, it plays the same role as the function get_k_previous_observation, we are removing that re-calculation\n"
-
-#EXP_NAME="05-TrackCenter-precomputed"
-#COMMENT="# the center of the track from the previous observation is required, this is often computed on the flight withing the inner loops of the cost matrix, we are precomputing on the prediction, So far only in AoS.\n"
-
-#EXP_NAME="06-Avoid-Area-Computation"
-#COMMENT="# In the second cost, the area was being computed of the track was being computed in the inner loop\n"
+EXP_NAME="02-No_ArcCosine"
+COMMENT="ArcCosine is replaced by a taylor series approximantion with a coefficient adjustment."
 
 function time_me {
     local BIN_UNDER_TEST="$1"
     local exp_name="$2"
    
-    make WARMUP_FRAMES_USR=80
 
     for det in $(ls dets/dets_*.bin | sort -t_ -nk2,2); do
         echo -n "."
@@ -101,6 +91,7 @@ if [ -f "$TIMING_FILE" ]; then
     rm "$TIMING_FILE"
 fi
  
+make WARMUP_FRAMES_USR=80
 for i in $(seq 1 $MAX_TIMING_RUNS); do 
     echo -n "iteration $i..."
     time_me ./soa.bin "$TIMING_FILE"
