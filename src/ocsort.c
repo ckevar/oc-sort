@@ -6,8 +6,9 @@ int OCSort::matched[MAX_TRACKS + 1]; // trks and detections
 int OCSort::unmatched_trks[MAX_TRACKS];
 float OCSort::cost_matrix[MAX_TRACKS * MAX_DETECTIONS];
 float OCSort::iou_matrix[MAX_TRACKS * MAX_DETECTIONS];
+struct ClassConfig OCSort::class_cfg[MAX_NUM_CLASSES];
 
-OCSort::OCSort(OCSORTcfg config) {
+OCSort::OCSort(OCSORTcfg config, const char *class_cfg_pathfile) {
     cfg = config;
     if(0 == config_check(&config)) {
         cfg_valid = 1;
@@ -20,6 +21,11 @@ OCSort::OCSort(OCSORTcfg config) {
     active_trks = 0;
     frame_count = 0;
     ID_manager = 1;
+    printf("Configuration file %s\n", class_cfg_pathfile);
+    if(load_class_config(class_cfg, class_cfg_pathfile) <= 0) {
+        cfg_valid = 0;
+        cfg = {0};
+     }
 }
 
 char OCSort::config_check(OCSORTcfg *config) {

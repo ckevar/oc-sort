@@ -13,17 +13,15 @@ enum {
 };
 
 // --- Predict ---
-// void CVKalmanFilterAoS::predict(struct Track *t) {
-// void CVKalmanFilterAoS::predict(float *state, float P[][KF_NUM_STATES]) {
-void CVKalmanFilterAoS::predict(float *state, float *P) {
+void kalman_predict(float *Q, float *state, float *P) {
 
     state[IDX_X] += state[IDX_dX];
     state[IDX_Y] += state[IDX_dY];
     state[IDX_S] += state[IDX_dS];
 
-    predict_Pi(P, 0);
-    predict_Pi(P, 1);
-    predict_Pi(P, 2);
+    gkalman_predict_Pi(P, 0);
+    gkalman_predict_Pi(P, 1);
+    gkalman_predict_Pi(P, 2);
     
     for(int j = 0; j < KF_NUM_STATES; j++) 
         P[j] += Q[j];
@@ -38,7 +36,7 @@ void CVKalmanFilterAoS::predict(float *state, float *P) {
 // --- End Predict ---
 
 // --- Update ----
-void update_state_with_K(float *state, float *K, float *innovation) {
+void _update_state_with_K(float *state, float *K, float *innovation) {
     state[IDX_X] += K[IDX_X] * innovation[IDX_X];
     state[IDX_Y] += K[IDX_Y] * innovation[IDX_Y];
     state[IDX_S] += K[IDX_S] * innovation[IDX_S];
@@ -50,12 +48,17 @@ void update_state_with_K(float *state, float *K, float *innovation) {
 }
 
 
-// void CVKalmanFilterAoS::update(float *state, float P[][KF_NUM_STATES], float *innovation) {
-void CVKalmanFilterAoS::update(float *state, float *P, float *innovation) {
+void kalman_update(
+    float *R, 
+    float *state, 
+    float *P, 
+    float *innovation) 
+{
     float K[KF_NUM_STATES]; // NOTE: This is local, because This class is a manager
-    compute_K_fast(K, P, R);
-    update_state_with_K(state, K, innovation);
-    update_P_with_K(P, K, R);
+                            
+    gkalman_fast_gain(K, P, R);
+    _update_state_with_K(state, K, innovation);
+    gkalman_update_P_with_K(P, K, R);
 }
 // --- END Update ---
 

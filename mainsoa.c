@@ -103,19 +103,20 @@ int main(int argc, char *argv[]) {
     OCSORTcfg ocsort_cfg;
     MOTManager mot("track-test", KITTI_FMT);
     
-    if (argc < 1) {
-        fprintf(stderr, "We need a detections binary file.\n");
+    if (argc < USR_IN_NUM) {
+        fprintf(stderr, "Usage: %s <path/to/dets.bin> <path/to/class_config.txt\n", argv[USR_IN_BIN]);
         return 1;
     }
-    
+
     MK_OCSORT_DEFAULT_CONFIG(&ocsort_cfg);
-    OCSortSoA ocsort(ocsort_cfg);
+    OCSortSoA ocsort(ocsort_cfg, argv[USR_IN_CLASS_CFG_FILE]);
 
     if(ocsort.isValid() == 0) {
+        fprintf(stderr, "Error: Invalid Configuration.\n");
         return 1;
     }
     
-    dets_len = dets_open(argv[1], 0, (float **)&dets);
+    dets_len = dets_open(argv[USR_IN_DETS_FILE], 0, (float **)&dets);
     if (dets_len <= 0)
         return 1;
     

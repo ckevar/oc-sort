@@ -19,15 +19,16 @@ typedef struct {
 
 class OCSort {
     public:
-        OCSort(OCSORTcfg config);
+        OCSort(OCSORTcfg config, const char *class_cfg_pathfile);
         char isValid(void);
         static float bbox_out[MAX_TRACKS][5];
 
     protected:
          /* Initialization */
-        OCSORTcfg cfg;
+        OCSORTcfg cfg; // TODO: rename this tracker_cfg
         char cfg_valid;
         char config_check(OCSORTcfg *config);
+        static struct ClassConfig class_cfg[MAX_NUM_CLASSES]; 
 
         /* Detections */
         uint16_t dets_len;

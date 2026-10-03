@@ -13,7 +13,7 @@
 
 class OCSortSoA: public OCSort {
     public:
-        OCSortSoA(OCSORTcfg config) : OCSort(config) {};
+        OCSortSoA(OCSORTcfg config, const char *class_cfg_pathfile) : OCSort(config, class_cfg_pathfile) {};
         int update(struct Detection *detsAoS, uint16_t dets_len);
 
     private:
@@ -29,8 +29,6 @@ class OCSortSoA: public OCSort {
         void predict_tracks(void);
         void freeze_track_state(int trk_idx);
         void unfreeze_track_state(int trk_idx, int det_idx);
-        CVKalmanFilterSoA kf;
-
 
         /* First Association */
         void cost_stage1(void);

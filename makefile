@@ -1,7 +1,7 @@
 
 .PHONY: clean all
 
-WARMUP_FRAMES_USR ?= 10 
+WARMUP_FRAMES_USR ?= 0
 
 all: soa.bin aos.bin
 

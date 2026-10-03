@@ -5,6 +5,7 @@
 #include <cstdint>
 
 enum {MOT17_FMT, KITTI_FMT};
+enum {USR_IN_BIN = 0, USR_IN_DETS_FILE, USR_IN_CLASS_CFG_FILE, USR_IN_NUM};
 
 class MOTManager {
     public:

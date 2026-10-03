@@ -76,7 +76,7 @@ void OCSortAoS::predict_tracks(void) {
             trks[i].ds = 0.0f;
         }
 
-        kf.predict(trks[i].state, trks[i].covariance);
+        kalman_predict(class_cfg[0].Q, trks[i].state, trks[i].covariance);
 
         trks[i].age += 1;
         trks[i].time_since_update += 1;
@@ -182,7 +182,7 @@ void OCSortAoS::update_track_state(struct Track *t, struct DetectionAoS *d) {
     dz[3] = d->ratio - t->r;
     
     // Update XYSR BBox Track State
-    kf.update(t->state, t->covariance, dz);
+    kalman_update(class_cfg[0].R, t->state, t->covariance, dz);
 
     // Update (re-calculate) XYXY BBox
     xysr2xyxy_aos(t);
@@ -277,9 +277,9 @@ void OCSortAoS::unfreeze_track_state(struct Track *t, struct DetectionAoS *d) {
         dz[2] = s - t->s;
         dz[3] = r - t->r;
 
-        kf.update(t->state, t->covariance, dz);
+        kalman_update(class_cfg[0].R, t->state, t->covariance, dz);
         if (k < (time_gap - 1)) {
-            kf.predict(t->state, t->covariance);
+            kalman_predict(class_cfg[0].Q, t->state, t->covariance);
         }
 
     }

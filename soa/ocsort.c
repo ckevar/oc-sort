@@ -72,7 +72,7 @@ void OCSortSoA::predict_tracks(void) {
             trks.ds[ti] = 0.0f;
         }
 
-        kf.predict_soa(&trks, ti);
+        kalman_predict_soa(class_cfg[0].Q, &trks, ti);
         
         trks.age[ti] += 1;
         trks.time_since_update[ti] += 1;
@@ -356,9 +356,9 @@ void OCSortSoA::unfreeze_track_state(int trk_idx, int det_idx) {
         dz[2] = s - trks.s[trk_idx];
         dz[3] = r - trks.r[trk_idx];
 
-        kf.update(dz, &trks, trk_idx);
+        kalman_update(class_cfg[0].R, dz, &trks, trk_idx);
         if (k < (time_gap - 1)) {
-            kf.predict_soa(&trks, trk_idx);
+            kalman_predict_soa(class_cfg[0].Q, &trks, trk_idx);
         }
 
     }
@@ -375,7 +375,7 @@ void OCSortSoA::update_track_state(int trk_idx, int det_idx) {
     dz[3] = dets.ratio[det_idx] - trks.r[trk_idx];
 
     // update xywr bounding box
-    kf.update(dz, &trks, trk_idx);
+    kalman_update(class_cfg[0].R, dz, &trks, trk_idx);
 
     // update (re-calculate) xyxy bounding box
     xysr_to_xyxy_soa(&trks, trk_idx);

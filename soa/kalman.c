@@ -20,7 +20,7 @@
 // --- Predict --
 
 
-void CVKalmanFilterSoA::predict_soa(struct Tracks *trks, int trk_i) {
+void kalman_predict_soa(float *Q, struct Tracks *trks, int trk_i) {
    
     trks->x[trk_i] += trks->dx[trk_i];
     trks->y[trk_i] += trks->dy[trk_i];
@@ -31,9 +31,9 @@ void CVKalmanFilterSoA::predict_soa(struct Tracks *trks, int trk_i) {
     // trks.ds[trk_i] = trks.ds[trk_i];
 
     // --- Predict Covariance ---
-    predict_Pi(trks->covariance[trk_i], 0);   
-    predict_Pi(trks->covariance[trk_i], 1);   
-    predict_Pi(trks->covariance[trk_i], 2);
+    gkalman_predict_Pi(trks->covariance[trk_i], 0);   
+    gkalman_predict_Pi(trks->covariance[trk_i], 1);   
+    gkalman_predict_Pi(trks->covariance[trk_i], 2);
     for (int j = 0; j < KF_NUM_STATES; j++)
         trks->covariance[trk_i][j] += Q[j];
     
@@ -62,7 +62,7 @@ void _update_state_with_K(struct Tracks *trks, int i, float *K, float *y) {
 
 
 
-void CVKalmanFilterSoA::update(float *y, struct Tracks *trks, int trk_i) {
+void kalman_update(float *R, float *y, struct Tracks *trks, int trk_i) {
     // Input:
     // - y: Innovation Array, the difference between measured (z) and estimated (x): z - x,
     // - trks: a struct of arrays, holding all tracks,
@@ -72,13 +72,13 @@ void CVKalmanFilterSoA::update(float *y, struct Tracks *trks, int trk_i) {
     float K[KF_NUM_STATES];
     // 1. Update state X
     // 1.1. Compute fast K:
-    compute_K_fast(K, trks->covariance[trk_i], R);
+    gkalman_fast_gain(K, trks->covariance[trk_i], R);
 
     // 1.2. Update Track States
     _update_state_with_K(trks, trk_i, K, y);
 
     // 2. Update P having (K), there's another method that we can update P without K.
-    update_P_with_K(trks->covariance[trk_i], K, R);
+    gkalman_update_P_with_K(trks->covariance[trk_i], K, R);
 }
 // --- End Update
 

@@ -8,17 +8,13 @@
 #include "aos/track.h"
 #include "aos/kalman.h"
 
-// DEBUGING purposes {
-#define OCSORT_SOA_NOT_IMPLEMENTED() \
-    fprintf(stderr, "[TODO:] %s() is not implemented yet.\n", __func__)
-// }
-
 class OCSortAoS: public OCSort {
     private:
         void load_track_template(void);
 
     public: 
-        OCSortAoS(OCSORTcfg config): OCSort(config) {load_track_template(); };
+        OCSortAoS(OCSORTcfg config, const char *class_cfg_pathfile): OCSort(config, class_cfg_pathfile
+                ) {load_track_template(); };
         int update(struct Detection *raw_dets, uint16_t raw_dets_len);
 
     private:
@@ -34,7 +30,6 @@ class OCSortAoS: public OCSort {
         void unfreeze_track_state(struct Track *t, struct DetectionAoS *d);
         void update_track_state(struct Track *t, struct DetectionAoS *d);
         void update_track_observations(struct Track *t, float *det_raw);
-        CVKalmanFilterAoS kf;
 
         // First Association
         void cost_stage1(void);
